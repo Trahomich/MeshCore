@@ -1,5 +1,9 @@
 #include "E213Display.h"
 
+#ifdef CYRILLIC
+  #include "glcdfont6x8.h"
+#endif
+
 #include "../../MeshCore.h"
 
 BaseDisplay* E213Display::detectEInk()
@@ -50,6 +54,8 @@ bool E213Display::begin() {
   display->setRotation(3);
 
 #ifdef CYRILLIC
+  display->setFont(&glcdfont6x8);
+  display->setTextSize(1);
   display->cp437(true);
 #endif
 
@@ -122,6 +128,12 @@ void E213Display::startFrame(Color bkg) {
     // Fill with black if light background requested (inverted for e-ink)
     display->fillRect(0, 0, width(), height(), BLACK);
   }
+
+#ifdef CYRILLIC
+  display->setFont(&glcdfont6x8);
+  display->setTextSize(1);
+  display->cp437(true);
+#endif
 }
 
 void E213Display::setTextSize(int sz) {

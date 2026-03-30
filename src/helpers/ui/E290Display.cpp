@@ -1,5 +1,9 @@
 #include "E290Display.h"
 
+#ifdef CYRILLIC
+  #include "glcdfont6x8.h"
+#endif
+
 #include "../../MeshCore.h"
 
 bool E290Display::begin() {
@@ -12,6 +16,8 @@ bool E290Display::begin() {
   display.setRotation(3);
 
 #ifdef CYRILLIC
+  display.setFont(&glcdfont6x8);
+  display.setTextSize(1);
   display.cp437(true);
 #endif
 
@@ -75,6 +81,12 @@ void E290Display::startFrame(Color bkg) {
     // Fill with black if light background requested (inverted for e-ink)
     display.fillRect(0, 0, width(), height(), BLACK);
   }
+
+#ifdef CYRILLIC
+  display.setFont(&glcdfont6x8);
+  display.setTextSize(1);
+  display.cp437(true);
+#endif
 }
 
 void E290Display::setTextSize(int sz) {
