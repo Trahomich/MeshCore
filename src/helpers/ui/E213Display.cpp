@@ -142,7 +142,7 @@ void E213Display::setCursor(int x, int y) {
 }
 
 void E213Display::print(const char *str) {
-#ifdef CYRILLIC
+#if defined(CYRILLIC) || defined(TRANSLIT)
   char buf[256];
   translateUTF8ToBlocks(buf, str, sizeof(buf));
   display_crc.update<char>(buf, strlen(buf));
@@ -197,7 +197,7 @@ void E213Display::drawXbm(int x, int y, const uint8_t *bits, int w, int h) {
 }
 
 uint16_t E213Display::getTextWidth(const char *str) {
-#ifdef CYRILLIC
+#if defined(CYRILLIC) || defined(TRANSLIT)
   char buf[256];
   translateUTF8ToBlocks(buf, str, sizeof(buf));
   str = buf;

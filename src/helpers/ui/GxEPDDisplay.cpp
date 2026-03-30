@@ -117,7 +117,7 @@ void GxEPDDisplay::setCursor(int x, int y) {
 }
 
 void GxEPDDisplay::print(const char* str) {
-#ifdef CYRILLIC
+#if defined(CYRILLIC) || defined(TRANSLIT)
   char buf[256];
   translateUTF8ToBlocks(buf, str, sizeof(buf));
   display_crc.update<char>(buf, strlen(buf));
@@ -186,7 +186,7 @@ void GxEPDDisplay::drawXbm(int x, int y, const uint8_t* bits, int w, int h) {
 }
 
 uint16_t GxEPDDisplay::getTextWidth(const char* str) {
-#ifdef CYRILLIC
+#if defined(CYRILLIC) || defined(TRANSLIT)
   char buf[256];
   translateUTF8ToBlocks(buf, str, sizeof(buf));
   str = buf;

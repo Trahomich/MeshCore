@@ -65,7 +65,13 @@ void SH1106Display::setCursor(int x, int y)
 
 void SH1106Display::print(const char *str)
 {
+#if defined(CYRILLIC) || defined(TRANSLIT)
+  char buf[256];
+  translateUTF8ToBlocks(buf, str, sizeof(buf));
+  display.print(buf);
+#else
   display.print(str);
+#endif
 }
 
 void SH1106Display::fillRect(int x, int y, int w, int h)
@@ -85,6 +91,11 @@ void SH1106Display::drawXbm(int x, int y, const uint8_t *bits, int w, int h)
 
 uint16_t SH1106Display::getTextWidth(const char *str)
 {
+#if defined(CYRILLIC) || defined(TRANSLIT)
+  char buf[256];
+  translateUTF8ToBlocks(buf, str, sizeof(buf));
+  str = buf;
+#endif
   int16_t x1, y1;
   uint16_t w, h;
   display.getTextBounds(str, 0, 0, &x1, &y1, &w, &h);

@@ -2,6 +2,7 @@
 
 #include <stdint.h>
 #include <string.h>
+#include <helpers/TxtDataHelpers.h>
 
 class DisplayDriver {
   int _w, _h;
@@ -44,6 +45,9 @@ public:
   
   // convert UTF-8 characters to displayable block characters for compatibility
   virtual void translateUTF8ToBlocks(char* dest, const char* src, size_t dest_size) {
+#ifdef TRANSLIT
+    StrHelper::transliterateUtf8(dest, src, dest_size);
+#else
     size_t j = 0;
 #ifdef CYRILLIC	  
 	char last_char = 0;
@@ -119,6 +123,7 @@ public:
       }
     }
     dest[j] = 0;
+#endif // TRANSLIT
   }
   
   // draw text with ellipsis if it exceeds max_width

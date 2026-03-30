@@ -95,7 +95,7 @@ void E290Display::setCursor(int x, int y) {
 }
 
 void E290Display::print(const char *str) {
-#ifdef CYRILLIC
+#if defined(CYRILLIC) || defined(TRANSLIT)
   char buf[256];
   translateUTF8ToBlocks(buf, str, sizeof(buf));
   display_crc.update<char>(buf, strlen(buf));
@@ -150,7 +150,7 @@ void E290Display::drawXbm(int x, int y, const uint8_t *bits, int w, int h) {
 }
 
 uint16_t E290Display::getTextWidth(const char *str) {
-#ifdef CYRILLIC
+#if defined(CYRILLIC) || defined(TRANSLIT)
   char buf[256];
   translateUTF8ToBlocks(buf, str, sizeof(buf));
   str = buf;

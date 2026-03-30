@@ -15,4 +15,14 @@ public:
   static const char* ftoa3(float f); //Converts float to string with 3 decimal places
   static bool isBlank(const char* str);
   static uint32_t fromHex(const char* src);
+
+  /**
+   * \brief  Transliterate Russian (Cyrillic) UTF-8 characters to Latin ASCII equivalents.
+   *         Non-Russian characters are passed through unchanged.
+   * \param  dest   destination buffer for transliterated string
+   * \param  src    source UTF-8 string
+   * \param  buf_sz  size of destination buffer
+   * \returns  number of bytes written to dest (excluding null terminator)
+   */
+  static int transliterateUtf8(char* dest, const char* src, size_t buf_sz);
 };
