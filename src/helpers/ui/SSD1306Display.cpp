@@ -82,7 +82,13 @@ void SSD1306Display::setCursor(int x, int y) {
 }
 
 void SSD1306Display::print(const char* str) {
+#ifdef CYRILLIC
+  char buf[256];
+  translateUTF8ToBlocks(buf, str, sizeof(buf));
+  display.print(buf);
+#else
   display.print(str);
+#endif
 }
 
 void SSD1306Display::fillRect(int x, int y, int w, int h) {
@@ -98,6 +104,11 @@ void SSD1306Display::drawXbm(int x, int y, const uint8_t* bits, int w, int h) {
 }
 
 uint16_t SSD1306Display::getTextWidth(const char* str) {
+#ifdef CYRILLIC
+  char buf[256];
+  translateUTF8ToBlocks(buf, str, sizeof(buf));
+  str = buf;
+#endif
   int16_t x1, y1;
   uint16_t w, h;
   display.getTextBounds(str, 0, 0, &x1, &y1, &w, &h);

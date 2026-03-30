@@ -135,7 +135,13 @@ void ST7789LCDDisplay::setCursor(int x, int y) {
 }
 
 void ST7789LCDDisplay::print(const char* str) {
+#ifdef CYRILLIC
+  char buf[256];
+  translateUTF8ToBlocks(buf, str, sizeof(buf));
+  display.print(buf);
+#else
   display.print(str);
+#endif
 }
 
 void ST7789LCDDisplay::fillRect(int x, int y, int w, int h) {
@@ -166,6 +172,11 @@ void ST7789LCDDisplay::drawXbm(int x, int y, const uint8_t* bits, int w, int h) 
 }
 
 uint16_t ST7789LCDDisplay::getTextWidth(const char* str) {
+#ifdef CYRILLIC
+  char buf[256];
+  translateUTF8ToBlocks(buf, str, sizeof(buf));
+  str = buf;
+#endif
   int16_t x1, y1;
   uint16_t w, h;
   display.getTextBounds(str, 0, 0, &x1, &y1, &w, &h);
