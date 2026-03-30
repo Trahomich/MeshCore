@@ -49,6 +49,10 @@ bool E213Display::begin() {
   // Set to landscape mode rotated 180 degrees
   display->setRotation(3);
 
+#ifdef CYRILLIC
+  display->cp437(true);
+#endif
+
   _init = true;
   _isOn = true;
 
@@ -138,8 +142,15 @@ void E213Display::setCursor(int x, int y) {
 }
 
 void E213Display::print(const char *str) {
+#ifdef CYRILLIC
+  char buf[256];
+  translateUTF8ToBlocks(buf, str, sizeof(buf));
+  display_crc.update<char>(buf, strlen(buf));
+  display->print(buf);
+#else
   display_crc.update<char>(str, strlen(str));
-    display->print(str);
+  display->print(str);
+#endif
 }
 
 void E213Display::fillRect(int x, int y, int w, int h) {
@@ -186,6 +197,11 @@ void E213Display::drawXbm(int x, int y, const uint8_t *bits, int w, int h) {
 }
 
 uint16_t E213Display::getTextWidth(const char *str) {
+#ifdef CYRILLIC
+  char buf[256];
+  translateUTF8ToBlocks(buf, str, sizeof(buf));
+  str = buf;
+#endif
   int16_t x1, y1;
   uint16_t w, h;
   display->getTextBounds(str, 0, 0, &x1, &y1, &w, &h);
