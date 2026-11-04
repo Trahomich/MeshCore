@@ -54,8 +54,10 @@ jobs:
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: |
           cd out
+          ls -la
           cp lufree_companion_radio_ble-ci-*.uf2 lufree_companion_radio_ble.uf2
           cp lufree_companion_radio_ble-ci-*.zip lufree_companion_radio_ble.zip
+          ls -la
 
       - name: Publish LuFree Firmware Release
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
@@ -73,9 +75,12 @@ jobs:
             - `lufree_companion_radio_ble.uf2` — для прошивки drag-and-drop в режиме DFU-бутлоадера (дважды нажать RESET).
           prerelease: true
           make_latest: false
+          # zip первым: uf2 уже есть в релизе, а пропадал именно DFU-zip
+          # (см. задачу #16 — publish дважды падал на втором файле)
+          fail_on_unmatched_files: true
           files: |
-            out/lufree_companion_radio_ble.uf2
             out/lufree_companion_radio_ble.zip
+            out/lufree_companion_radio_ble.uf2
 
       # Also publish the firmware files to GitHub Packages (GHCR) as an OCI
       # artifact so they appear in the account's "Packages" tab.
