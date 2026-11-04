@@ -1037,6 +1037,11 @@
 <li><strong><code>lufree_companion_radio_ble.uf2</code></strong> — для DFU-бутлоадера: дважды быстро нажать RESET (или RESET+BOOT), появится диск <code>LUFBTBOOT</code>, скопировать файл туда (drag&amp;drop), устройство само перезагрузится.</li>
 </ul>
 <p>Важно: это приложение без SoftDevice — DFU-бутлоадер и S140 должны уже быть на плате (штатно для XIAO nRF52840 / клонов HT-RA62). OTA-прошивка из приложения MeshCore использует свой механизм обновления.</p>
+<p>Те же два файла дополнительно публикуются в GitHub Packages (GHCR) как OCI-артефакт <code>ghcr.io/trahomich/lufree-firmware:latest</code> — они видны во вкладке Packages. Скачать оттуда (после первого пуша пакет по умолчанию приватный; владелец может переключить видимость на public в настройках пакета):</p>
+<pre><code class="language-bash">oras login ghcr.io            # логин GitHub, роль read:packages
+mkdir lufree &amp;&amp; cd lufree
+oras pull ghcr.io/trahomich/lufree-firmware:latest   # положит zip + uf2
+</code></pre>
 <h2 id="_2">Сборка</h2>
 <pre><code class="language-bash">pio run -e lufree_companion_radio_ble     # BLE-компаньон (основная)
 pio run -e lufree_companion_radio_usb     # USB-компаньон
