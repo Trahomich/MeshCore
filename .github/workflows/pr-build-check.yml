@@ -64,7 +64,7 @@ jobs:
           tag_name: lufree-latest
           name: LuFree Firmware (latest)
           body: |
-            Автосборка прошивки LuFree для «лучика» (Heltec HT-RA62: nRF52840 + SX1262).
+            Автосборка прошивки LuFree для «лучика» (ProMicro NRF52840 / fakeTec: nRF52840 + SX1262, экран WeAct 2.9" e-paper — автоподбор пинов).
 
             Коммит: ${{ github.sha }}
 
