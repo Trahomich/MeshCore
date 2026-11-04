@@ -565,6 +565,13 @@ void UITask::begin(DisplayDriver* display, SensorManager* sensors, NodePrefs* no
 #if defined(PIN_USER_BTN_ANA)
   analog_btn.begin();
 #endif
+#if defined(UI_JOYSTICK_5WAY)
+  joystick_up.begin();
+  joystick_down.begin();
+  joystick_left.begin();
+  joystick_right.begin();
+  back_btn.begin();
+#endif
 
   _node_prefs = node_prefs;
 
@@ -732,6 +739,21 @@ void UITask::loop() {
   } else if (ev == BUTTON_EVENT_LONG_PRESS) {
     c = handleLongPress(KEY_RIGHT);
   }
+#if defined(UI_JOYSTICK_5WAY)
+  // full 5-way stick (e.g. LuFree): up/down navigation
+  ev = joystick_up.check();
+  if (ev == BUTTON_EVENT_CLICK) {
+    c = checkDisplayOn(KEY_UP);
+  } else if (ev == BUTTON_EVENT_LONG_PRESS) {
+    c = handleLongPress(KEY_UP);
+  }
+  ev = joystick_down.check();
+  if (ev == BUTTON_EVENT_CLICK) {
+    c = checkDisplayOn(KEY_DOWN);
+  } else if (ev == BUTTON_EVENT_LONG_PRESS) {
+    c = handleLongPress(KEY_DOWN);
+  }
+#endif
   ev = back_btn.check();
   if (ev == BUTTON_EVENT_TRIPLE_CLICK) {
     c = handleTripleClick(KEY_SELECT);

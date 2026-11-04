@@ -222,9 +222,13 @@ build_companion_firmwares() {
 #  build_firmware "RAK_4631_companion_radio_ble"
 #  build_firmware "t1000e_companion_radio_ble"
 
+  # LuFree: autobuild only the LuFree companion firmware.
+  # Restore "build all" below (and remove the explicit lines) to rebuild every variant again.
+  build_firmware "lufree_companion_radio_ble"
+
   # build all companion firmwares
-  build_all_firmwares_by_suffix "_companion_radio_usb"
-  build_all_firmwares_by_suffix "_companion_radio_ble"
+#  build_all_firmwares_by_suffix "_companion_radio_usb"
+#  build_all_firmwares_by_suffix "_companion_radio_ble"
 
 }
 

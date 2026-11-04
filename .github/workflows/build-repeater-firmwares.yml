@@ -5,9 +5,10 @@ permissions:
 
 on:
   workflow_dispatch:
-  push:
-    tags:
-      - 'repeater-*'
+  # LuFree: tag-triggered autobuild disabled (LuFree-only CI); restore the block below to re-enable
+  # push:
+  #   tags:
+  #     - 'repeater-*'
 
 jobs:
 
