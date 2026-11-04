@@ -9,7 +9,10 @@
 //      (уровень busy_level=HIGH, idle=LOW) в окне ~100 мс с ВОЗВРАТОМ к idle.
 //      Попадание подтверждается повтором.
 //   3) Порядок гипотез: (а) «окна» из 4 подряд идущих свободных пинов в порядке
-//      шлейфа модуля CLK DIN CS DC (прямой и обратный), (б) типичные пары шины
+//      шлейфа модуля CLK DIN CS DC (прямой и обратный), (а2) «окна» из 6
+//      подряд идущих пинов — полный шлейф CLK DIN CS DC RST BUSY (прямой и
+//      обратный): RST-пульс будит панель из deep sleep (там SWRESET 0x12
+//      игнорируется и стадия (а) её не видит), (б) типичные пары шины
 //      × любые CS/DC, (в) полный перебор (BUSY-кандидаты — ВСЕ свободные пины,
 //      на случай панели в deep sleep, когда BUSY высокоомный) до таймаута.
 // LED при поиске быстро мигает (PIN_LED из варианта).
@@ -126,12 +129,20 @@ bool watchBusy(BusyCand *c, int nc, uint32_t window_ms, int8_t &hitPin) {
   return false;
 }
 
-// одна попытка: команды на гипотезу пинов + наблюдение BUSY (2 повтора)
-bool attempt(const int8_t *pins /* clk,din,cs,dc */, BusyCand *c, int nc, int8_t &busyHit) {
+// одна попытка: команды на гипотезу пинов + наблюдение BUSY (2 повтора).
+// rst >= 0 — гипотеза аппаратного RST: пульс LOW 50 мкс -> HIGH, пауза 60 мс.
+// Это будит панель из deep sleep (там SWRESET 0x12 игнорируется) и заодно
+// аппаратно сбрасывает живую (её BUSY дёрнется уже от резета, waitIdle ниже
+// это переварит). rst == -1 — RST не ищем, только SWRESET.
+bool attempt(const int8_t *pins /* clk,din,cs,dc */, BusyCand *c, int nc, int8_t &busyHit, int8_t rst = -1) {
   int8_t clk = pins[0], din = pins[1], cs = pins[2], dc = pins[3];
   if (noDrive[clk] || noDrive[din] || noDrive[cs] || noDrive[dc]) return false;
   if (stuck[clk] || stuck[din] || stuck[cs] || stuck[dc]) return false;
   if (clk == din || clk == cs || clk == dc || din == cs || din == dc || cs == dc) return false;
+  if (rst >= 0) {
+    if (noDrive[rst] || stuck[rst]) return false;
+    if (rst == clk || rst == din || rst == cs || rst == dc) return false;
+  }
 
   // рабочая копия кандидатов: без застрявших и без совпадающих с драйверами
   BusyCand c2[16];
@@ -139,6 +150,7 @@ bool attempt(const int8_t *pins /* clk,din,cs,dc */, BusyCand *c, int nc, int8_t
   for (int i = 0; i < nc && nc2 < 16; i++) {
     if (stuck[c[i].pin]) continue;
     if (c[i].pin == clk || c[i].pin == din || c[i].pin == cs || c[i].pin == dc) continue;
+    if (rst >= 0 && c[i].pin == rst) continue;
     c2[nc2++] = c[i];
   }
   if (nc2 == 0) return false;
@@ -148,6 +160,27 @@ bool attempt(const int8_t *pins /* clk,din,cs,dc */, BusyCand *c, int nc, int8_t
   pinMode(din, OUTPUT); digitalWrite(din, LOW);
   pinMode(cs, OUTPUT);  digitalWrite(cs, HIGH);
   pinMode(dc, OUTPUT);
+  if (rst >= 0) {
+    pinMode(rst, OUTPUT);
+    digitalWrite(rst, HIGH); delayMicroseconds(10);
+    digitalWrite(rst, LOW);  delayMicroseconds(50);
+    digitalWrite(rst, HIGH);
+    delay(10);   // панель выходит из резета (её BUSY при этом занят несколько мс)
+    // записанные idle могли быть прочитаны, пока BUSY панели был высокоомным
+    // (deep sleep) — обновляем их по факту: ждём, пока уровень устоится.
+    for (int i = 0; i < nc; i++) {
+      uint8_t a = digitalRead(c[i].pin);
+      uint32_t ts = millis();
+      while (millis() - ts < 300) {
+        delay(5);
+        uint8_t b = digitalRead(c[i].pin);
+        if (b == a) break;
+        a = b; ts = millis();
+      }
+      c[i].idle = a;
+    }
+    delay(50);   // страховка: BUSY после резета обязан вернуться к idle
+  }
 
   // ждём окончания возможной предыдущей активности панели, но НЕ вечно:
   // застрявший не в idle кандидат — помеха (зажатый стик и т.п.), исключаем
@@ -214,20 +247,68 @@ EPaperPins ePaperAutoDetect() {
     pinMode(p, INPUT);          // вернуть в нейтраль
     if (v1 == v2) { cand[nc].pin = p; cand[nc].idle = v1; nc++; noDrive[p] = true; }
   }
-  if (nc == 0) { releaseAllPins(); return out; }
+  // nc == 0 больше не приговор: панель в deep sleep даёт высокоомный BUSY,
+  // фильтр подтяжек его отбрасывает — её поднимет RST-пульс в стадии 2а2.
 
-  int8_t pins[4], busyHit = -1;
+  int8_t pins[4], busyHit = -1, rstFound = -1;
   uint32_t t0 = millis();
   bool timedOut = false;
 
   // 2а) окна из 4 подряд идущих пинов (прямой и обратный порядок шлейфа)
-  for (int dir = 0; dir < 2 && busyHit < 0 && !timedOut; dir++) {
+  for (int dir = 0; nc > 0 && dir < 2 && busyHit < 0 && !timedOut; dir++) {
     for (int i = 0; i + 3 < N_ALL; i++) {
       ledTick();
       if (millis() - t0 > SCAN_CAP_MS) { timedOut = true; break; }
       if (dir == 0) { pins[0]=ALL_PINS[i]; pins[1]=ALL_PINS[i+1]; pins[2]=ALL_PINS[i+2]; pins[3]=ALL_PINS[i+3]; }
       else          { pins[0]=ALL_PINS[i+3]; pins[1]=ALL_PINS[i+2]; pins[2]=ALL_PINS[i+1]; pins[3]=ALL_PINS[i]; }
       if (attempt(pins, cand, nc, busyHit)) break;
+    }
+  }
+
+  // 2а2) окна из 6 подряд идущих пинов — полный шлейф модуля
+  // CLK DIN CS DC RST BUSY (прямой и обратный порядок). RST-пульс будит
+  // панель из deep sleep, поэтому BUSY (6-й пин окна) добавляем к кандидатам
+  // с живым чтением idle — в исходный cand он не попал (высокоомный).
+  if (busyHit < 0 && !timedOut) {
+    for (int dir = 0; dir < 2 && busyHit < 0 && !timedOut; dir++) {
+      for (int i = 0; i + 5 < N_ALL; i++) {
+        ledTick();
+        if (millis() - t0 > SCAN_CAP_MS) { timedOut = true; break; }
+        if (dir == 0) { pins[0]=ALL_PINS[i];   pins[1]=ALL_PINS[i+1]; pins[2]=ALL_PINS[i+2]; pins[3]=ALL_PINS[i+3]; }
+        else          { pins[0]=ALL_PINS[i+5]; pins[1]=ALL_PINS[i+4]; pins[2]=ALL_PINS[i+3]; pins[3]=ALL_PINS[i+2]; }
+        int8_t rst = (dir == 0) ? ALL_PINS[i+4] : ALL_PINS[i+1];
+        int8_t bp  = (dir == 0) ? ALL_PINS[i+5] : ALL_PINS[i];
+        if (stuck[bp] || stuck[rst]) continue;
+        BusyCand c6[16];
+        int n6 = 0;
+        for (int q = 0; q < nc && n6 < 16; q++) {
+          if (cand[q].pin == bp || cand[q].pin == rst) continue;
+          c6[n6++] = cand[q];
+        }
+        if (n6 < 16) {
+          pinMode(bp, INPUT); delayMicroseconds(100);
+          c6[n6].pin = bp; c6[n6].idle = digitalRead(bp); n6++;
+        }
+        if (n6 == 0) continue;
+        int8_t r = rst;
+        if (attempt(pins, c6, n6, busyHit, r)) { rstFound = r; break; }
+      }
+    }
+  }
+
+  // панель могла проснуться от RST-пульса в 2а2: её BUSY стал активным, но в
+  // исходный cand не попал. Пересобираем список перед 2б (объединяем).
+  if (busyHit < 0) {
+    for (int i = 0; i < N_ALL && nc < 16; i++) {
+      int8_t p = ALL_PINS[i];
+      if (stuck[p]) continue;
+      bool known = false;
+      for (int q = 0; q < nc; q++) if (cand[q].pin == p) { known = true; break; }
+      if (known) continue;
+      pinMode(p, INPUT_PULLUP);   delayMicroseconds(60);  uint8_t v1 = digitalRead(p);
+      pinMode(p, INPUT_PULLDOWN); delayMicroseconds(60);  uint8_t v2 = digitalRead(p);
+      pinMode(p, INPUT);
+      if (v1 == v2) { cand[nc].pin = p; cand[nc].idle = v1; nc++; noDrive[p] = true; }
     }
   }
 
@@ -280,7 +361,10 @@ EPaperPins ePaperAutoDetect() {
 
   if (busyHit >= 0) {
     out.clk = pins[0]; out.din = pins[1]; out.cs = pins[2]; out.dc = pins[3];
-    out.rst = -1;          // RST не ищем: SWRESET достаточно (deep sleep не используем)
+    // rst = пин, найденный в стадии 2а2 (окно из 6); -1 — нашли без аппаратного
+    // RST (SWRESET достаточен, панель не спала). GxEPD2 с rst=-1 сам не
+    // драйверит резет.
+    out.rst = rstFound;
     out.busy = busyHit;
   }
   releaseAllPins();
@@ -289,6 +373,12 @@ EPaperPins ePaperAutoDetect() {
 
 // свободный пин-заглушка для MISO: nrfx_spim конфигурирует MISO как ВХОД
 // последним, поэтому подставлять найденный пин нельзя — шина умрёт (К1).
+// общий список свободных пинов (для сканеров другой периферии, напр. стика)
+const int8_t* lufreeFreePins(int &count) {
+  count = N_ALL;
+  return ALL_PINS;
+}
+
 int8_t ePaperStubMiso(const EPaperPins &p) {
   const int8_t used[6] = {p.clk, p.din, p.cs, p.dc, p.rst, p.busy};
   for (int i = 0; i < N_ALL; i++) {
@@ -310,10 +400,13 @@ bool ePaperPingPins(const EPaperPins &p) {
   int8_t hit = -1;
   BusyCand arr[1] = { c };
   int8_t pins[4] = { p.clk, p.din, p.cs, p.dc };
-  if (attempt(pins, arr, 1, hit) && hit == p.busy) {
+  int8_t rst = p.rst;   // cfg со стадии 2а2: ping обязан пульсировать RST так же,
+                        // как скан, иначе проснувшуюся панель не проверить
+  if (attempt(pins, arr, 1, hit, rst) && hit == p.busy) {
     // вернуть сигнальные пины в нейтраль до инициализации SPI
     pinMode(p.clk, INPUT_PULLUP); pinMode(p.din, INPUT_PULLUP);
     pinMode(p.cs, INPUT_PULLUP);  pinMode(p.dc, INPUT_PULLUP);
+    if (rst >= 0) pinMode(rst, INPUT_PULLUP);
     return true;
   }
   return false;
