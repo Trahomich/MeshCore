@@ -27,3 +27,7 @@ bool ePaperPingPins(const EPaperPins &p);
 // Загрузка/сохранение найденных пинов (InternalFS, файл /epaper.cfg).
 EPaperPins lufreeLoadPins();
 void lufreeSavePins(const EPaperPins &p);
+
+// Список свободных пинов (ALL_PINS из EPaperScan.cpp) — общий для сканеров
+// периферии (экран, стик): LuFree один источник правды о свободных GPIO.
+const int8_t* lufreeFreePins(int &count);

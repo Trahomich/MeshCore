@@ -88,6 +88,10 @@ static uint32_t _atoi(const char* sp) {
 /* GLOBAL OBJECTS */
 #ifdef DISPLAY_CLASS
   #include "UITask.h"
+  #if defined(LUFREE_STICK)
+    #include <helpers/ui/DisplayDriver.h>
+    #include "StickScan.h"   // калибровка стика LuFree (рантайм-пины)
+  #endif
   UITask ui_task(&board, &serial_interface);
 #endif
 
@@ -236,6 +240,13 @@ void setup() {
 #endif
 
 #ifdef DISPLAY_CLASS
+  #if defined(LUFREE_STICK)
+    // LuFree: загрузка/калибровка стика до ui_task.begin — кнопки
+    // (placement-new, см. StickScan.cpp) должны существовать до begin().
+    // BLE/радио к этому моменту уже подняты: калибровка (~до 90 с в плохом
+    // случае) их не блокирует.
+    lufreeStickSetup(disp);
+  #endif
   ui_task.begin(disp, &sensors, the_mesh.getNodePrefs());  // still want to pass this in as dependency, as prefs might be moved
 #endif
 

@@ -20,7 +20,13 @@ AutoDiscoverRTCClock rtc_clock(fallback_clock);
 
 #ifdef DISPLAY_CLASS
   DISPLAY_CLASS display;
-  MomentaryButton user_btn(PIN_USER_BTN, 1000, true, true);
+  #if defined(LUFREE_STICK)
+    // LuFree: user_btn/joystick_*/back_btn — ссылки, объявленные в target.h;
+    // определяются в variants/lufree/StickScan.cpp (рантайм-пины стика,
+    // см. lufreeStickSetup). Здесь объекта не определяем.
+  #else
+    MomentaryButton user_btn(PIN_USER_BTN, 1000, true, true);
+  #endif
 #endif
 
 bool radio_init() {
