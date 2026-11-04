@@ -5,6 +5,17 @@
 
 Прошивка основана на стандартном companion MeshCore (UI `ui-new`, BLE/USB), автосборка CI в этом репозитории настроена только на LuFree.
 
+## Загрузка и прошивка
+
+Готовая сборка публикуется в разделе [Releases](https://github.com/Trahomich/MeshCore/releases) — rolling-прелиз **`lufree-latest`** обновляется при каждом push в `main`. Два файла:
+
+- **`lufree_companion_radio_ble.zip`** — DFU-пакет (внутри `manifest.json` + `firmware.bin/.dat`, `sd_req 0x0123` = S140 7.3.0). Прошивается штатными инструментами:
+  - **nRF Connect for Desktop → Programmer**: Add file → выбрать zip → Write;
+  - **Web Device View / adafruit web flasher**: открыть страницу, подключить устройство по USB, выбрать zip.
+- **`lufree_companion_radio_ble.uf2`** — для DFU-бутлоадера: дважды быстро нажать RESET (или RESET+BOOT), появится диск `LUFBTBOOT`, скопировать файл туда (drag&drop), устройство само перезагрузится.
+
+Важно: это приложение без SoftDevice — DFU-бутлоадер и S140 должны уже быть на плате (штатно для XIAO nRF52840 / клонов HT-RA62). OTA-прошивка из приложения MeshCore использует свой механизм обновления.
+
 ## Сборка
 
 ```bash
@@ -60,7 +71,7 @@ LED мигает при непрочитанных сообщениях (шта�
 
 ## CI
 
-Автосборка (теги `companion-*`, `workflow_dispatch`) собирает только `lufree_companion_radio_ble`; автосборка repeater/room-server отключена (закомментированные триггеры в их workflow); `pr-build-check` проверяет только LuFree. Возврат к полной автосборке — раскомментировать `build_all_firmwares_by_suffix` в `build.sh` и push-блоки в workflow-файлах.
+Автосборка (теги `companion-*`, `workflow_dispatch`) собирает только `lufree_companion_radio_ble`; автосборка repeater/room-server отключена (закомментированные триггеры в их workflow); `pr-build-check` проверяет только LuFree и при push в `main` публикует `uf2` + DFU-zip в rolling-релиз `lufree-latest` (см. «Загрузка и прошивка»). Возврат к полной автосборке — раскомментировать `build_all_firmwares_by_suffix` в `build.sh` и push-блоки в workflow-файлах.
 
 ## Подробнее
 
