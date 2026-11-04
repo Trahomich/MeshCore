@@ -19,7 +19,7 @@ on:
       - '.github/workflows/pr-build-check.yml'
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   build:
@@ -39,8 +39,39 @@ jobs:
           FIRMWARE_VERSION: ci
         run: /usr/bin/env bash build.sh build-companion-firmwares
 
+      # PR builds: attach zip artifact (GitHub wraps it in an extra zip layer)
       - name: Upload Firmware Artifacts
+        if: github.event_name == 'pull_request'
         uses: actions/upload-artifact@v7
         with:
           name: lufree-firmware
           path: out
+
+      # Push to main: publish ready-to-flash files to the rolling release
+      # (fixed file names, old assets are overwritten)
+      - name: Prepare Release Files
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          cd out
+          cp lufree_companion_radio_ble-ci-*.uf2 lufree_companion_radio_ble.uf2
+          cp lufree_companion_radio_ble-ci-*.zip lufree_companion_radio_ble.zip
+
+      - name: Publish LuFree Firmware Release
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: softprops/action-gh-release@v3
+        with:
+          tag_name: lufree-latest
+          name: LuFree Firmware (latest)
+          body: |
+            Автосборка прошивки LuFree для «лучика» (Heltec HT-RA62: nRF52840 + SX1262).
+
+            Коммит: ${{ github.sha }}
+
+            Файлы:
+            - `lufree_companion_radio_ble.zip` — DFU-пакет (внутри manifest.json) для прошивки через nRF Connect Programmer / Web Device View.
+            - `lufree_companion_radio_ble.uf2` — для прошивки drag-and-drop в режиме DFU-бутлоадера (дважды нажать RESET).
+          prerelease: true
+          make_latest: false
+          files: |
+            out/lufree_companion_radio_ble.uf2
+            out/lufree_companion_radio_ble.zip
