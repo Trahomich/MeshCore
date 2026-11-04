@@ -13,7 +13,8 @@
 ////////////////////////////////////////////////////////////////////////////////
 // Low frequency clock source
 
-#define USE_LFXO    // 32.768 kHz crystal oscillator
+#define USE_LFRC    // 32.768 kHz RC oscillator (как в официальном variants/promicro:
+                    // на платах этого семейства кристалл 32кГц не используется; LFXO вешал SD при старте)
 #define VARIANT_MCK (64000000ul)
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -50,7 +51,9 @@
 ////////////////////////////////////////////////////////////////////////////////
 // Notification LED (не подсветка!)  (PLACEHOLDER - сверить с платой)
 
-#define PIN_LED_NOTIFY          (22)
+// LED платы семейства Nologo ProMicro — физически P0.15 (карта official variants/promicro,
+// где Arduino-пин 22 = P0.15). В нашей identity-карте N = P0/P1.N, поэтому пишем (0 + 15).
+#define PIN_LED_NOTIFY          (0 + 15)
 #define LED_BUILTIN             PIN_LED_NOTIFY
 #define PIN_STATUS_LED          PIN_LED_NOTIFY
 #define PIN_LED                 LED_BUILTIN
