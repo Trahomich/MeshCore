@@ -1026,7 +1026,7 @@
 
 <h1 id="lufree-meshcore">LuFree — прошивка MeshCore для «лучика»</h1>
 <p><strong>LuFree</strong> — вариант companion-прошивки <a href="../../README.md">MeshCore</a> для устройства «лучик»:
-клон Heltec <strong>HT-RA62</strong> (<strong>nRF52840 + Semtech SX1262</strong>, «Faketec») + экран <strong>WeAct Studio 2.9" e-paper 128x296</strong> (SPI) + <strong>5-позиционный стик</strong> + отдельный <strong>LED-диод оповещения</strong> (не подсветка).</p>
+плата <strong>ProMicro NRF52840 (Nologo)</strong> с <strong>Semtech SX1262</strong> + экран <strong>WeAct Studio 2.9" e-paper 128x296</strong> (SPI) + <strong>5-позиционный стик</strong> + отдельный <strong>LED-диод оповещения</strong> (не подсветка). По INFO_UF2.TXT устройство работает под UF2 Bootloader 0.9.2 с SoftDevice <strong>S140 6.1.1</strong> (приложение с 0x26000).</p>
 <p>Прошивка основана на стандартном companion MeshCore (UI <code>ui-new</code>, BLE/USB), автосборка CI в этом репозитории настроена только на LuFree.</p>
 <h2 id="_1">Загрузка и прошивка</h2>
 <p>Готовая сборка публикуется в разделе <a href="https://github.com/Trahomich/MeshCore/releases">Releases</a> — rolling-прелиз <strong><code>lufree-latest</code></strong> обновляется при каждом push в <code>main</code>. Два файла:</p>
@@ -1036,7 +1036,7 @@
 <li><strong>Web Device View / adafruit web flasher</strong>: открыть страницу, подключить устройство по USB, выбрать zip.</li>
 <li><strong><code>lufree_companion_radio_ble.uf2</code></strong> — для DFU-бутлоадера: дважды быстро нажать RESET (или RESET+BOOT), появится диск <code>LUFBTBOOT</code>, скопировать файл туда (drag&amp;drop), устройство само перезагрузится.</li>
 </ul>
-<p>Важно: это приложение без SoftDevice — DFU-бутлоадер и S140 должны уже быть на плате (штатно для XIAO nRF52840 / клонов HT-RA62). OTA-прошивка из приложения MeshCore использует свой механизм обновления.</p>
+<p>Важно: это приложение без SoftDevice — DFU-бутлоадер и S140 6.1.1 должны уже быть на плате (так и есть на ProMicro NRF52840 с завода). OTA-прошивка из приложения MeshCore использует свой механизм обновления. Если плата не ProMicro NRF52840 / SoftDevice другой версии — сборка не подойдёт (падает при старте, красный LED мигает часто).</p>
 <p>Те же два файла дополнительно публикуются в GitHub Packages (GHCR) как OCI-артефакт <code>ghcr.io/trahomich/lufree-firmware:latest</code> — они видны во вкладке Packages. Скачать оттуда (после первого пуша пакет по умолчанию приватный; владелец может переключить видимость на public в настройках пакета):</p>
 <pre><code class="language-bash">oras login ghcr.io            # логин GitHub, роль read:packages
 mkdir lufree &amp;&amp; cd lufree
