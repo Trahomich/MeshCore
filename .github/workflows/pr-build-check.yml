@@ -20,6 +20,7 @@ on:
 
 permissions:
   contents: write
+  packages: write
 
 jobs:
   build:
@@ -75,3 +76,22 @@ jobs:
           files: |
             out/lufree_companion_radio_ble.uf2
             out/lufree_companion_radio_ble.zip
+
+      # Also publish the firmware files to GitHub Packages (GHCR) as an OCI
+      # artifact so they appear in the account's "Packages" tab.
+      # Releases (above) remain the main download channel.
+      - name: Publish to GitHub Packages (GHCR)
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          curl -sSL -o /tmp/oras.tgz https://github.com/oras-project/oras/releases/download/v1.2.0/oras_1.2.0_linux_amd64.tar.gz
+          sudo tar -xzf /tmp/oras.tgz -C /usr/local/bin oras
+          oras version
+          echo "$GH_TOKEN" | oras login ghcr.io -u "${{ github.actor }}" --password-stdin
+          OWNER="$(echo "${GITHUB_REPOSITORY_OWNER}" | tr '[:upper:]' '[:lower:]')"
+          cd out
+          oras push "ghcr.io/${OWNER}/lufree-firmware:latest" \
+            --artifact-type application/vnd.lufree.firmware \
+            lufree_companion_radio_ble.zip:application/zip \
+            lufree_companion_radio_ble.uf2:application/octet-stream

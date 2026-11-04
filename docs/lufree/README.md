@@ -16,6 +16,14 @@
 
 Важно: это приложение без SoftDevice — DFU-бутлоадер и S140 должны уже быть на плате (штатно для XIAO nRF52840 / клонов HT-RA62). OTA-прошивка из приложения MeshCore использует свой механизм обновления.
 
+Те же два файла дополнительно публикуются в GitHub Packages (GHCR) как OCI-артефакт `ghcr.io/trahomich/lufree-firmware:latest` — они видны во вкладке Packages. Скачать оттуда (после первого пуша пакет по умолчанию приватный; владелец может переключить видимость на public в настройках пакета):
+
+```bash
+oras login ghcr.io            # логин GitHub, роль read:packages
+mkdir lufree && cd lufree
+oras pull ghcr.io/trahomich/lufree-firmware:latest   # положит zip + uf2
+```
+
 ## Сборка
 
 ```bash
