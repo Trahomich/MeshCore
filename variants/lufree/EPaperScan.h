@@ -17,6 +17,10 @@ struct EPaperPins {
 // нескольких минут (быстрое мигание LED во время поиска).
 EPaperPins ePaperAutoDetect();
 
+// Свободный пин-заглушка для MISO (nrfx_spim конфигурирует MISO входом
+// ПОСЛЕ SCK-выхода, поэтому подставлять найденный пин нельзя).
+int8_t ePaperStubMiso(const EPaperPins &p);
+
 // Быстрая проверка сохранённых пинов (SWRESET/PowerOn + BUSY-отклик).
 bool ePaperPingPins(const EPaperPins &p);
 

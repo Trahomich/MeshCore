@@ -6,12 +6,15 @@
 //      Висящий пин следует за подтяжкой и отбрасывается.
 //   2) Оракул: посылка команд SWRESET (0x12) и Power On (0x04) битбэнгом на
 //      гипотезе (CLK,DIN,CS,DC); реальная панель отвечает импульсом BUSY
-//      (уровень busy_level=HIGH, idle=LOW) в окне ~100 мс. Попадание
-//      подтверждается повтором.
+//      (уровень busy_level=HIGH, idle=LOW) в окне ~100 мс с ВОЗВРАТОМ к idle.
+//      Попадание подтверждается повтором.
 //   3) Порядок гипотез: (а) «окна» из 4 подряд идущих свободных пинов в порядке
 //      шлейфа модуля CLK DIN CS DC (прямой и обратный), (б) типичные пары шины
-//      × любые CS/DC, (в) полный перебор до таймаута.
+//      × любые CS/DC, (в) полный перебор (BUSY-кандидаты — ВСЕ свободные пины,
+//      на случай панели в deep sleep, когда BUSY высокоомный) до таймаута.
 // LED при поиске быстро мигает (PIN_LED из варианта).
+// Все ожидания ограничены таймаутами: никаких вечных циклов до radio_init.
+// На выходе все сканированные пины возвращаются в INPUT_PULLUP (нейтраль).
 
 #include <Arduino.h>
 #include "EPaperScan.h"
@@ -42,14 +45,20 @@ const int8_t BUS_PAIRS[][2] = {
 };
 const int N_PAIRS = sizeof(BUS_PAIRS) / sizeof(BUS_PAIRS[0]);
 
-const uint32_t SCAN_CAP_MS = 10UL * 60UL * 1000UL;   // общий лимит сканирования
+// лимит скана: display.begin() идёт до radio_init, и всё это время нет
+// BLE/радио, поэтому полный перебор просто обрезается (первые стадии —
+// окна и типичные пары — успевают с запасом)
+const uint32_t SCAN_CAP_MS = 90UL * 1000UL;
 
 struct BusyCand {
   int8_t pin;
   uint8_t idle;      // уровень покоя (управляется панелью)
 };
 
-bool usedAsBusy[32];
+// noDrive: пин похож на линию BUSY (управляется снаружи) — нельзя делать
+// драйверным (CLK/DIN/CS/DC). stuck: пин застрял не в idle (помеха) —
+// исключается из наблюдения совсем.
+bool noDrive[32], stuck[32];
 
 void ledTick() {
 #ifdef PIN_LED
@@ -79,6 +88,20 @@ void sendCmd(uint8_t cmd, int8_t clk, int8_t din, int8_t cs, int8_t dc) {
   digitalWrite(cs, HIGH);
 }
 
+// все кандидаты вернулись к idle в течение timeout_ms?
+bool waitIdle(const BusyCand *c, int nc, uint32_t timeout_ms) {
+  uint32_t t0 = millis();
+  for (;;) {
+    bool all = true;
+    for (int i = 0; i < nc; i++) {
+      if (digitalRead(c[i].pin) != c[i].idle) { all = false; break; }
+    }
+    if (all) return true;
+    if (millis() - t0 >= timeout_ms) return false;
+    delay(1);
+  }
+}
+
 // следим за всеми BUSY-кандидатами окно window_ms; вернём true и пин,
 // который дольше прочего отклонился от своего idle-уровня
 bool watchBusy(BusyCand *c, int nc, uint32_t window_ms, int8_t &hitPin) {
@@ -106,22 +129,48 @@ bool watchBusy(BusyCand *c, int nc, uint32_t window_ms, int8_t &hitPin) {
 // одна попытка: команды на гипотезу пинов + наблюдение BUSY (2 повтора)
 bool attempt(const int8_t *pins /* clk,din,cs,dc */, BusyCand *c, int nc, int8_t &busyHit) {
   int8_t clk = pins[0], din = pins[1], cs = pins[2], dc = pins[3];
-  if (usedAsBusy[clk] || usedAsBusy[din] || usedAsBusy[cs] || usedAsBusy[dc]) return false;
+  if (noDrive[clk] || noDrive[din] || noDrive[cs] || noDrive[dc]) return false;
+  if (stuck[clk] || stuck[din] || stuck[cs] || stuck[dc]) return false;
   if (clk == din || clk == cs || clk == dc || din == cs || din == dc || cs == dc) return false;
+
+  // рабочая копия кандидатов: без застрявших и без совпадающих с драйверами
+  BusyCand c2[16];
+  int nc2 = 0;
+  for (int i = 0; i < nc && nc2 < 16; i++) {
+    if (stuck[c[i].pin]) continue;
+    if (c[i].pin == clk || c[i].pin == din || c[i].pin == cs || c[i].pin == dc) continue;
+    c2[nc2++] = c[i];
+  }
+  if (nc2 == 0) return false;
+  c = c2; nc = nc2;
 
   pinMode(clk, OUTPUT); digitalWrite(clk, LOW);
   pinMode(din, OUTPUT); digitalWrite(din, LOW);
   pinMode(cs, OUTPUT);  digitalWrite(cs, HIGH);
   pinMode(dc, OUTPUT);
 
-  // ждём окончания возможной предыдущей активности панели
-  for (int i = 0; i < nc; i++) { while (digitalRead(c[i].pin) != c[i].idle) delay(1); }
+  // ждём окончания возможной предыдущей активности панели, но НЕ вечно:
+  // застрявший не в idle кандидат — помеха (зажатый стик и т.п.), исключаем
+  // его совсем, иначе скан зависнет до radio_init (К2).
+  {
+    int w = 0;
+    for (int i = 0; i < nc; i++) {
+      BusyCand one[1] = { c[i] };
+      if (!waitIdle(one, 1, 200)) { stuck[c[i].pin] = true; continue; }
+      c[w++] = c[i];
+    }
+    nc = w;
+    if (nc == 0) return false;
+  }
 
   int8_t hit1 = -1;
   sendCmd(0x12, clk, din, cs, dc);          // SWRESET
   delay(10);
   sendCmd(0x04, clk, din, cs, dc);          // Power On -> BUSY-импульс
   if (!watchBusy(c, nc, 80, hit1)) return false;
+  // отклонение обязано закончиться возвратом к idle, иначе это не импульс
+  // BUSY, а постоянный уровень (отпущенный стик, наводка) — отвергаем (В2)
+  if (!waitIdle(c, nc, 300)) return false;
 
   // подтверждение повтором
   delay(5);
@@ -138,6 +187,13 @@ bool attempt(const int8_t *pins /* clk,din,cs,dc */, BusyCand *c, int nc, int8_t
 
 } // namespace
 
+// вернуть все сканированные пины в нейтраль (В4): после неудачного скана
+// никто не должен остаться OUTPUT LOW (например, линия подсветки).
+// Подтяжка вверх держит CS/CLK панели в неактивном уровне.
+static void releaseAllPins() {
+  for (int i = 0; i < N_ALL; i++) pinMode(ALL_PINS[i], INPUT_PULLUP);
+}
+
 EPaperPins ePaperAutoDetect() {
   EPaperPins out = {-1, -1, -1, -1, -1, -1};
 
@@ -145,6 +201,8 @@ EPaperPins ePaperAutoDetect() {
   pinMode(PIN_LED, OUTPUT);
   digitalWrite(PIN_LED, HIGH);
 #endif
+
+  for (int i = 0; i < 32; i++) { noDrive[i] = false; stuck[i] = false; }
 
   // 1) BUSY-кандидаты: управляемые линии
   BusyCand cand[16];
@@ -154,22 +212,19 @@ EPaperPins ePaperAutoDetect() {
     pinMode(p, INPUT_PULLUP);   delayMicroseconds(60);  uint8_t v1 = digitalRead(p);
     pinMode(p, INPUT_PULLDOWN); delayMicroseconds(60);  uint8_t v2 = digitalRead(p);
     pinMode(p, INPUT);          // вернуть в нейтраль
-    if (v1 == v2) { cand[nc].pin = p; cand[nc].idle = v1; nc++; }
+    if (v1 == v2) { cand[nc].pin = p; cand[nc].idle = v1; nc++; noDrive[p] = true; }
   }
-  if (nc == 0) return out;
-
-  for (int i = 0; i < 32; i++) usedAsBusy[i] = false;
-  // пин, назначенный BUSY, нельзя использовать как управляющий
-  for (int i = 0; i < nc; i++) usedAsBusy[cand[i].pin] = true;
+  if (nc == 0) { releaseAllPins(); return out; }
 
   int8_t pins[4], busyHit = -1;
   uint32_t t0 = millis();
+  bool timedOut = false;
 
   // 2а) окна из 4 подряд идущих пинов (прямой и обратный порядок шлейфа)
-  for (int dir = 0; dir < 2 && busyHit < 0; dir++) {
+  for (int dir = 0; dir < 2 && busyHit < 0 && !timedOut; dir++) {
     for (int i = 0; i + 3 < N_ALL; i++) {
       ledTick();
-      if (millis() - t0 > SCAN_CAP_MS) return out;
+      if (millis() - t0 > SCAN_CAP_MS) { timedOut = true; break; }
       if (dir == 0) { pins[0]=ALL_PINS[i]; pins[1]=ALL_PINS[i+1]; pins[2]=ALL_PINS[i+2]; pins[3]=ALL_PINS[i+3]; }
       else          { pins[0]=ALL_PINS[i+3]; pins[1]=ALL_PINS[i+2]; pins[2]=ALL_PINS[i+1]; pins[3]=ALL_PINS[i]; }
       if (attempt(pins, cand, nc, busyHit)) break;
@@ -177,12 +232,12 @@ EPaperPins ePaperAutoDetect() {
   }
 
   // 2б) типичные пары шины × любые CS/DC
-  if (busyHit < 0) {
-    for (int b = 0; b < N_PAIRS && busyHit < 0; b++) {
-      for (int csi = 0; csi < N_ALL && busyHit < 0; csi++) {
+  if (busyHit < 0 && !timedOut) {
+    for (int b = 0; b < N_PAIRS && busyHit < 0 && !timedOut; b++) {
+      for (int csi = 0; csi < N_ALL && busyHit < 0 && !timedOut; csi++) {
         for (int dci = 0; dci < N_ALL; dci++) {
           ledTick();
-          if (millis() - t0 > SCAN_CAP_MS) return out;
+          if (millis() - t0 > SCAN_CAP_MS) { timedOut = true; break; }
           pins[0] = BUS_PAIRS[b][0]; pins[1] = BUS_PAIRS[b][1];
           pins[2] = ALL_PINS[csi];   pins[3] = ALL_PINS[dci];
           if (attempt(pins, cand, nc, busyHit)) break;
@@ -191,18 +246,32 @@ EPaperPins ePaperAutoDetect() {
     }
   }
 
-  // 2в) полный перебор до лимита времени
-  if (busyHit < 0) {
-    for (int i = 0; i < N_ALL && busyHit < 0; i++) {
-      for (int j = 0; j < N_ALL && busyHit < 0; j++) {
-        if (j == i) continue;
-        for (int k = 0; k < N_ALL && busyHit < 0; k++) {
-          if (k == i || k == j) continue;
-          for (int l = 0; l < N_ALL; l++) {
-            ledTick();
-            if (millis() - t0 > SCAN_CAP_MS) return out;
-            pins[0]=ALL_PINS[i]; pins[1]=ALL_PINS[j]; pins[2]=ALL_PINS[k]; pins[3]=ALL_PINS[l];
-            if (attempt(pins, cand, nc, busyHit)) break;
+  // 2в) полный перебор до лимита времени. BUSY-кандидаты здесь — ВСЕ свободные
+  // пины (кроме застрявших): если панель осталась в deep sleep, её BUSY
+  // высокоомный и фильтр подтяжек его отбросил (В5). Драйверные пины,
+  // совпадающие с кандидатами, отбрасываются внутри attempt.
+  if (busyHit < 0 && !timedOut) {
+    BusyCand any[16];
+    int nAny = 0;
+    for (int i = 0; i < N_ALL && nAny < 16; i++) {
+      if (stuck[ALL_PINS[i]]) continue;
+      pinMode(ALL_PINS[i], INPUT); delayMicroseconds(100);
+      any[nAny].pin = ALL_PINS[i];
+      any[nAny].idle = digitalRead(ALL_PINS[i]);
+      nAny++;
+    }
+    if (nAny > 0) {
+      for (int i = 0; i < N_ALL && busyHit < 0 && !timedOut; i++) {
+        for (int j = 0; j < N_ALL && busyHit < 0 && !timedOut; j++) {
+          if (j == i) continue;
+          for (int k = 0; k < N_ALL && busyHit < 0 && !timedOut; k++) {
+            if (k == i || k == j) continue;
+            for (int l = 0; l < N_ALL; l++) {
+              ledTick();
+              if (millis() - t0 > SCAN_CAP_MS) { timedOut = true; break; }
+              pins[0]=ALL_PINS[i]; pins[1]=ALL_PINS[j]; pins[2]=ALL_PINS[k]; pins[3]=ALL_PINS[l];
+              if (attempt(pins, any, nAny, busyHit)) break;
+            }
           }
         }
       }
@@ -214,7 +283,22 @@ EPaperPins ePaperAutoDetect() {
     out.rst = -1;          // RST не ищем: SWRESET достаточно (deep sleep не используем)
     out.busy = busyHit;
   }
+  releaseAllPins();
   return out;
+}
+
+// свободный пин-заглушка для MISO: nrfx_spim конфигурирует MISO как ВХОД
+// последним, поэтому подставлять найденный пин нельзя — шина умрёт (К1).
+int8_t ePaperStubMiso(const EPaperPins &p) {
+  const int8_t used[6] = {p.clk, p.din, p.cs, p.dc, p.rst, p.busy};
+  for (int i = 0; i < N_ALL; i++) {
+    int8_t q = ALL_PINS[i];
+    if (q < 0) continue;
+    bool in = false;
+    for (int j = 0; j < 6; j++) if (used[j] == q) { in = true; break; }
+    if (!in) return q;
+  }
+  return -1;
 }
 
 // быстрая проверка сохранённых пинов (та же пара команд)
@@ -226,7 +310,13 @@ bool ePaperPingPins(const EPaperPins &p) {
   int8_t hit = -1;
   BusyCand arr[1] = { c };
   int8_t pins[4] = { p.clk, p.din, p.cs, p.dc };
-  return attempt(pins, arr, 1, hit) && hit == p.busy;
+  if (attempt(pins, arr, 1, hit) && hit == p.busy) {
+    // вернуть сигнальные пины в нейтраль до инициализации SPI
+    pinMode(p.clk, INPUT_PULLUP); pinMode(p.din, INPUT_PULLUP);
+    pinMode(p.cs, INPUT_PULLUP);  pinMode(p.dc, INPUT_PULLUP);
+    return true;
+  }
+  return false;
 }
 
 EPaperPins lufreeLoadPins() {

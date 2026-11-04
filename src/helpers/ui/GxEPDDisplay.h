@@ -52,7 +52,9 @@ private:
 #if defined(LUFREE_EINK)
   // LUFREE: панель не обнаружена по BUSY-пробе — все операции no-op,
   // чтобы неверная распиновка экрана не мешала BLE/LoRa (см. begin()).
-  bool _absent = false;
+  // true ДО begin(): объект GxEPD2 ещё не сконструирован (placement-new),
+  // любой draw до begin() обязан быть no-op (В3). begin() сбрасывает.
+  bool _absent = true;
 #endif
   uint16_t _curr_color;
   CRC32 display_crc;

@@ -43,8 +43,16 @@ bool GxEPDDisplay::begin() {
     _init = false;
     return false;
   }
-  // MISO экрану не нужен (модуль без MISO) — подставляем CLK как заглушку.
-  SPI1.setPins(p.clk, p.clk, p.din);
+  // MISO экрану не нужен (модуль без MISO), но подставлять найденный пин
+  // нельзя: nrfx_spim конфигурирует MISO входом ПОСЛЕ SCK-выходом — SCK
+  // стал бы входом и шина умерла. Берём посторонний свободный пин (К1).
+  int8_t miso_stub = ePaperStubMiso(p);
+  if (miso_stub < 0) {
+    _absent = true;
+    _init = false;
+    return false;
+  }
+  SPI1.setPins(miso_stub, p.clk, p.din);
   new (epdStorage()) EPD_T(EINK_DISPLAY_MODEL(p.cs, p.dc, p.rst, p.busy));
   _absent = false;
 #endif
