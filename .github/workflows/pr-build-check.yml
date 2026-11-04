@@ -61,26 +61,40 @@ jobs:
 
       - name: Publish LuFree Firmware Release
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        uses: softprops/action-gh-release@v3
-        with:
-          tag_name: lufree-latest
-          name: LuFree Firmware (latest)
-          body: |
-            Автосборка прошивки LuFree для «лучика» (ProMicro NRF52840 / fakeTec: nRF52840 + SX1262, экран WeAct 2.9" e-paper — автоподбор пинов).
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        # softprops/action-gh-release при замене существующих ассетов падал
+        # на втором файле (каждый ран заменял только один ассет, см. задачу
+        # #16). Используем gh CLI: upsert релиза + upload --clobber с ретраями.
+        run: |
+          set -euo pipefail
+          BODY=$(cat <<'EOF'
+          Автосборка прошивки LuFree для «лучика» (ProMicro NRF52840 / fakeTec: nRF52840 + SX1262, экран WeAct 2.9" e-paper — автоподбор пинов).
 
-            Коммит: ${{ github.sha }}
+          Коммит: ${{ github.sha }}
 
-            Файлы:
-            - `lufree_companion_radio_ble.zip` — DFU-пакет (внутри manifest.json) для прошивки через nRF Connect Programmer / Web Device View.
-            - `lufree_companion_radio_ble.uf2` — для прошивки drag-and-drop в режиме DFU-бутлоадера (дважды нажать RESET).
-          prerelease: true
-          make_latest: false
-          # zip первым: uf2 уже есть в релизе, а пропадал именно DFU-zip
-          # (см. задачу #16 — publish дважды падал на втором файле)
-          fail_on_unmatched_files: true
-          files: |
-            out/lufree_companion_radio_ble.zip
-            out/lufree_companion_radio_ble.uf2
+          Файлы:
+          - `lufree_companion_radio_ble.zip` — DFU-пакет (внутри manifest.json) для прошивки через nRF Connect Programmer / Web Device View.
+          - `lufree_companion_radio_ble.uf2` — для прошивки drag-and-drop в режиме DFU-бутлоадера (дважды нажать RESET).
+          EOF
+          )
+          R="Trahomich/MeshCore"
+          if gh release view lufree-latest -R "$R" >/dev/null 2>&1; then
+            gh release edit lufree-latest -R "$R" \
+              --title "LuFree Firmware (latest)" --notes "$BODY" --prerelease
+          else
+            gh release create lufree-latest -R "$R" --prerelease \
+              --title "LuFree Firmware (latest)" --notes "$BODY"
+          fi
+          ok=0
+          for i in 1 2 3; do
+            if gh release upload lufree-latest -R "$R" \
+                 out/lufree_companion_radio_ble.zip out/lufree_companion_radio_ble.uf2 \
+                 --clobber; then ok=1; break; fi
+            echo "upload attempt $i failed, retrying in 20s"; sleep 20
+          done
+          [ "$ok" = 1 ] || { echo "::error::release upload failed after 3 attempts"; exit 1; }
+          gh release view lufree-latest -R "$R" --json assets -q '.assets[].name'
 
       # Also publish the firmware files to GitHub Packages (GHCR) as an OCI
       # artifact so they appear in the account's "Packages" tab.
