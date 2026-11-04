@@ -1,6 +1,11 @@
 
 #include "GxEPDDisplay.h"
 
+#if defined(LUFREE_EINK)
+  #include <new>
+  #include "EPaperScan.h"
+#endif
+
 #ifdef EXP_PIN_BACKLIGHT
   #include <PCA9557.h>
   extern PCA9557 expander;
@@ -14,7 +19,35 @@
   SPIClass SPI1 = SPIClass(FSPI);
 #endif
 
+#if defined(LUFREE_EINK)
+// LUFREE: хранилище объекта GxEPD2 (конструируется placement-new в begin()
+// после автоподбора пинов экрана).
+alignas(8) static uint8_t s_epd_storage[sizeof(GxEPDDisplay::EPD_T) + 8];
+void* GxEPDDisplay::epdStorage() { return s_epd_storage; }
+#endif
+
 bool GxEPDDisplay::begin() {
+#if defined(LUFREE_EINK)
+  // LUFREE: распиновка экрана неизвестна — прошивка подбирает её сама.
+  // 1) быстрая проверка сохранённой конфигурации (InternalFS /epaper.cfg);
+  // 2) полный автоскан (EPaperScan): битбэнг SWRESET/PowerOn + наблюдение
+  //    BUSY, LED быстро мигает, до 10 минут; результат сохраняется.
+  // Панель не найдена => _absent=true, все операции no-op, BLE/LoRa работают.
+  EPaperPins p = lufreeLoadPins();
+  if (!p.valid() || !ePaperPingPins(p)) {
+    p = ePaperAutoDetect();
+    if (p.valid()) lufreeSavePins(p);
+  }
+  if (!p.valid()) {
+    _absent = true;
+    _init = false;
+    return false;
+  }
+  // MISO экрану не нужен (модуль без MISO) — подставляем CLK как заглушку.
+  SPI1.setPins(p.clk, p.clk, p.din);
+  new (epdStorage()) EPD_T(EINK_DISPLAY_MODEL(p.cs, p.dc, p.rst, p.busy));
+  _absent = false;
+#endif
   display.epd2.selectSPI(SPI1, SPISettings(4000000, MSBFIRST, SPI_MODE0));
 #ifdef ESP32
   SPI1.begin(PIN_DISPLAY_SCLK, PIN_DISPLAY_MISO, PIN_DISPLAY_MOSI, PIN_DISPLAY_CS);
@@ -37,6 +70,9 @@ bool GxEPDDisplay::begin() {
 }
 
 void GxEPDDisplay::turnOn() {
+#if defined(LUFREE_EINK)
+  if (_absent) { _isOn = true; return; }
+#endif
   if (!_init) begin();
 #if defined(DISP_BACKLIGHT) && !defined(BACKLIGHT_BTN)
   digitalWrite(DISP_BACKLIGHT, HIGH);
@@ -56,18 +92,27 @@ void GxEPDDisplay::turnOff() {
 }
 
 void GxEPDDisplay::clear() {
+#if defined(LUFREE_EINK)
+  if (_absent) return;
+#endif
   display.fillScreen(GxEPD_WHITE);
   display.setTextColor(GxEPD_BLACK);
   display_crc.reset();
 }
 
 void GxEPDDisplay::startFrame(Color bkg) {
+#if defined(LUFREE_EINK)
+  if (_absent) return;
+#endif
   display.fillScreen(GxEPD_WHITE);
   display.setTextColor(_curr_color = GxEPD_BLACK);
   display_crc.reset();
 }
 
 void GxEPDDisplay::setTextSize(int sz) {
+#if defined(LUFREE_EINK)
+  if (_absent) return;
+#endif
   display_crc.update<int>(sz);
   switch(sz) {
     case 1:  // Small
@@ -86,6 +131,9 @@ void GxEPDDisplay::setTextSize(int sz) {
 }
 
 void GxEPDDisplay::setColor(Color c) {
+#if defined(LUFREE_EINK)
+  if (_absent) return;
+#endif
   display_crc.update<Color> (c);
   // colours need to be inverted for epaper displays
   if (c == DARK) {
@@ -96,17 +144,26 @@ void GxEPDDisplay::setColor(Color c) {
 }
 
 void GxEPDDisplay::setCursor(int x, int y) {
+#if defined(LUFREE_EINK)
+  if (_absent) return;
+#endif
   display_crc.update<int>(x);
   display_crc.update<int>(y);
   display.setCursor((x+offset_x)*scale_x, (y+offset_y)*scale_y);
 }
 
 void GxEPDDisplay::print(const char* str) {
+#if defined(LUFREE_EINK)
+  if (_absent) return;
+#endif
   display_crc.update<char>(str, strlen(str));
   display.print(str);
 }
 
 void GxEPDDisplay::fillRect(int x, int y, int w, int h) {
+#if defined(LUFREE_EINK)
+  if (_absent) return;
+#endif
   display_crc.update<int>(x);
   display_crc.update<int>(y);
   display_crc.update<int>(w);
@@ -115,6 +172,9 @@ void GxEPDDisplay::fillRect(int x, int y, int w, int h) {
 }
 
 void GxEPDDisplay::drawRect(int x, int y, int w, int h) {
+#if defined(LUFREE_EINK)
+  if (_absent) return;
+#endif
   display_crc.update<int>(x);
   display_crc.update<int>(y);
   display_crc.update<int>(w);
@@ -123,6 +183,9 @@ void GxEPDDisplay::drawRect(int x, int y, int w, int h) {
 }
 
 void GxEPDDisplay::drawXbm(int x, int y, const uint8_t* bits, int w, int h) {
+#if defined(LUFREE_EINK)
+  if (_absent) return;
+#endif
   display_crc.update<int>(x);
   display_crc.update<int>(y);
   display_crc.update<int>(w);
@@ -164,6 +227,9 @@ void GxEPDDisplay::drawXbm(int x, int y, const uint8_t* bits, int w, int h) {
 }
 
 uint16_t GxEPDDisplay::getTextWidth(const char* str) {
+#if defined(LUFREE_EINK)
+  if (_absent) return 0;
+#endif
   int16_t x1, y1;
   uint16_t w, h;
   display.getTextBounds(str, 0, 0, &x1, &y1, &w, &h);
@@ -172,6 +238,9 @@ uint16_t GxEPDDisplay::getTextWidth(const char* str) {
 
 void GxEPDDisplay::endFrame() {
   uint32_t crc = display_crc.finalize();
+#if defined(LUFREE_EINK)
+  if (_absent) { last_display_crc_value = crc; return; }
+#endif
   if (crc != last_display_crc_value) {
     display.display(true);
     last_display_crc_value = crc;

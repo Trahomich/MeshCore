@@ -79,4 +79,12 @@
 #define PIN_BUTTON1          (6)
 #define BUTTON_PIN           PIN_BUTTON1
 
+#ifdef __cplusplus
+// LuFree (e-paper, GxEPD2): библиотеке нужны имена SCK/MISO/MOSI для
+// неиспользуемой панели GxEPD2_1248 (как в variants/mesh_pocket).
+extern const int SCK;
+extern const int MISO;
+extern const int MOSI;
+#endif
+
 

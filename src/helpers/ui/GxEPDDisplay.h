@@ -17,9 +17,25 @@
 #include "DisplayDriver.h"
 
 class GxEPDDisplay : public DisplayDriver {
+public:
+#if defined(EINK_DISPLAY_MODEL) && defined(LUFREE_EINK)
+  // LUFREE: тип панели как GxEPD2-объект (объявлен public: используется
+  // статическим буфером в GxEPDDisplay.cpp).
+  typedef GxEPD2_BW<EINK_DISPLAY_MODEL, EINK_DISPLAY_MODEL::HEIGHT> EPD_T;
+#endif
 
+private:
 #if defined(EINK_DISPLAY_MODEL)
+#if defined(LUFREE_EINK)
+  // LUFREE: реальная распиновка экрана неизвестна до рантайм-скана (EPaperScan),
+  // поэтому объект GxEPD2 конструируется placement-new в статическом буфере
+  // epdStorage() внутри begin(), уже с найденными пинами (см. GxEPDDisplay.cpp).
+  // Тип EPD_T объявлен public (см. ниже, в секции public).
+  EPD_T& display;
+  static void* epdStorage();
+#else
   GxEPD2_BW<EINK_DISPLAY_MODEL, EINK_DISPLAY_MODEL::HEIGHT> display;
+#endif
   const float scale_x  = EINK_SCALE_X; 
   const float scale_y  = EINK_SCALE_Y;
   const float offset_x = EINK_X_OFFSET;
@@ -33,13 +49,22 @@ class GxEPDDisplay : public DisplayDriver {
 #endif
   bool _init = false;
   bool _isOn = false;
+#if defined(LUFREE_EINK)
+  // LUFREE: панель не обнаружена по BUSY-пробе — все операции no-op,
+  // чтобы неверная распиновка экрана не мешала BLE/LoRa (см. begin()).
+  bool _absent = false;
+#endif
   uint16_t _curr_color;
   CRC32 display_crc;
   int last_display_crc_value = 0;
 
 public:
 #if defined(EINK_DISPLAY_MODEL)
+#if defined(LUFREE_EINK)
+  GxEPDDisplay() : DisplayDriver(128, 128), display(*reinterpret_cast<EPD_T*>(epdStorage())) {}
+#else
   GxEPDDisplay() : DisplayDriver(128, 128), display(EINK_DISPLAY_MODEL(PIN_DISPLAY_CS, PIN_DISPLAY_DC, PIN_DISPLAY_RST, PIN_DISPLAY_BUSY)) {}
+#endif
 #else
   GxEPDDisplay() : DisplayDriver(128, 128), display(GxEPD2_150_BN(DISP_CS, DISP_DC, DISP_RST, DISP_BUSY)) {}
 #endif

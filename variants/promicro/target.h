@@ -7,7 +7,11 @@
 #include <helpers/radiolib/CustomSX1262Wrapper.h>
 #include <helpers/AutoDiscoverRTCClock.h>
 #ifdef DISPLAY_CLASS
-  #include <helpers/ui/SSD1306Display.h>
+  #if defined(LUFREE_EINK)
+    #include <helpers/ui/GxEPDDisplay.h>   // LuFree: e-paper WeAct 2.9" (SSD1680)
+  #else
+    #include <helpers/ui/SSD1306Display.h>
+  #endif
   #include <helpers/ui/MomentaryButton.h>
 #endif
 

@@ -24,8 +24,12 @@ AutoDiscoverRTCClock rtc_clock(fallback_clock);
 #endif
 
 bool radio_init() {
+#if !defined(LUFREE_EINK)
+  // LuFree: I2C-скан RTC не запускаем — пины Wire могут принадлежать экрану,
+  // который ищется автоподбором (GxEPDDisplay::begin -> EPaperScan).
+  // Без begin() часы прозрачно падают в VolatileRTCClock (fallback).
   rtc_clock.begin(Wire);
-  
+#endif
   return radio.std_init(&SPI);
 }
 
