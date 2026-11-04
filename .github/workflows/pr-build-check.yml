@@ -18,23 +18,29 @@ on:
       - 'platformio.ini'
       - '.github/workflows/pr-build-check.yml'
 
+permissions:
+  contents: read
+
 jobs:
   build:
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        environment:
-          # LuFree-only build check (LuFree firmware, Heltec HT-RA62)
-          # previous multi-platform matrix can be restored from git history
-          - lufree_companion_radio_ble
-
     steps:
+
       - name: Clone Repo
         uses: actions/checkout@v6
 
       - name: Setup Build Environment
         uses: ./.github/actions/setup-build-environment
 
-      - name: Build ${{ matrix.environment }}
-        run: pio run -e ${{ matrix.environment }}
+      # build.sh builds only the LuFree firmware (lufree_companion_radio_ble)
+      # and produces .uf2 + .zip in the out/ folder
+      - name: Build LuFree Firmware
+        env:
+          FIRMWARE_VERSION: ci
+        run: /usr/bin/env bash build.sh build-companion-firmwares
+
+      - name: Upload Firmware Artifacts
+        uses: actions/upload-artifact@v7
+        with:
+          name: lufree-firmware
+          path: out
