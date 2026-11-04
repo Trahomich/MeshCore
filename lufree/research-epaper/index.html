@@ -1,0 +1,1225 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Documentation for the open source MeshCore firmware">
+      
+      
+      
+        <link rel="canonical" href="https://meshcore-dev.github.io/meshcore/lufree/research-epaper/">
+      
+      
+        <link rel="prev" href="../research-build/">
+      
+      
+        <link rel="next" href="../research-input-board/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.8.0">
+    
+    
+      
+        <title>Исследование: e-paper в MeshCore и подключение экрана 2.9" 128x296 (WeAct) в LuFree - MeshCore Docs</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.57a0d79d.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../_stylesheets/extra.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    <body dir="ltr">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#e-paper-meshcore-29-128x296-weact-lufree" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="MeshCore Docs" class="md-header__button md-logo" aria-label="MeshCore Docs" data-md-component="logo">
+      
+  <img src="../../_assets/meshcore.svg" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            MeshCore Docs
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Исследование: e-paper в MeshCore и подключение экрана 2.9" 128x296 (WeAct) в LuFree
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/meshcore-dev/meshcore/" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    meshcore-dev/meshcore
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="MeshCore Docs" class="md-nav__button md-logo" aria-label="MeshCore Docs" data-md-component="logo">
+      
+  <img src="../../_assets/meshcore.svg" alt="logo">
+
+    </a>
+    MeshCore Docs
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/meshcore-dev/meshcore/" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    meshcore-dev/meshcore
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Introduction
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../cli_commands/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CLI Commands
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../companion_protocol/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Companion Protocol
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../docs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Local Documentation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../faq/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Frequently Asked Questions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../kiss_modem_protocol/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    MeshCore KISS Modem Protocol
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../nrf52_power_management/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    nRF52 Power Management
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../number_allocations/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Number Allocations
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../packet_format/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Packet Format
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../payloads/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Payload Format
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../qr_codes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    QR Codes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../stats_binary_frames/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Stats Binary Frame Structures
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../terminal_chat_cli/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Terminal Chat CLI
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_14" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_14" id="__nav_14_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Lufree
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_14_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_14">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Lufree
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    LuFree — прошивка MeshCore для «лучика»
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../research-build/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Исследование: система вариантов и CI в MeshCore
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Исследование: e-paper в MeshCore и подключение экрана 2.9" 128x296 (WeAct) в LuFree
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Исследование: e-paper в MeshCore и подключение экрана 2.9" 128x296 (WeAct) в LuFree
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-meshcore-e-paper" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Как MeshCore подключает e-paper дисплей
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="1. Как MeshCore подключает e-paper дисплей">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#gxepddisplay-define" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Контракт GxEPDDisplay (все #define из его кода)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-spi-nrf52840-gxepddisplay" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. SPI на nRF52840 — важная особенность GxEPDDisplay
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-29-128x296" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Панель 2.9" 128x296: готовая поддержка есть
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-lufree-56" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Рекомендуемая конфигурация для LuFree (для задач #5/#6)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4. Рекомендуемая конфигурация для LuFree (для задач #5/#6)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#weact-studio-29-128x296" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        О WeAct Studio 2.9" 128x296
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-led" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Подсветка/LED
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../research-input-board/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Исследование: ввод (кнопки/стик) и nRF52840 в MeshCore
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-meshcore-e-paper" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Как MeshCore подключает e-paper дисплей
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="1. Как MeshCore подключает e-paper дисплей">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#gxepddisplay-define" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Контракт GxEPDDisplay (все #define из его кода)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-spi-nrf52840-gxepddisplay" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. SPI на nRF52840 — важная особенность GxEPDDisplay
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-29-128x296" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Панель 2.9" 128x296: готовая поддержка есть
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-lufree-56" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Рекомендуемая конфигурация для LuFree (для задач #5/#6)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4. Рекомендуемая конфигурация для LuFree (для задач #5/#6)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#weact-studio-29-128x296" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        О WeAct Studio 2.9" 128x296
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-led" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Подсветка/LED
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+    <a href="https://github.com/meshcore-dev/meshcore/edit/main/docs/lufree/research-epaper.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 20H6V4h7v5h5v3.1l2-2V8l-6-6H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h4zm10.2-7c.1 0 .3.1.4.2l1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2m0 3.9L14.1 23H12v-2.1l6.1-6.1z"/></svg>
+    </a>
+  
+  
+
+
+<h1 id="e-paper-meshcore-29-128x296-weact-lufree">Исследование: e-paper в MeshCore и подключение экрана 2.9" 128x296 (WeAct) в LuFree</h1>
+<p>Проверено по репозиторию <code>MeshCore/</code> (клон Trahomich/MeshCore) и исходникам библиотеки GxEPD2 <strong>1.6.2</strong> (именно эта версия подключена во всех вариантах MeshCore). Только факты и ссылки на код; реализация — в задачах #5/#6.</p>
+<h2 id="1-meshcore-e-paper">1. Как MeshCore подключает e-paper дисплей</h2>
+<p>Универсальный интерфейс дисплея — абстрактный класс <strong><code>src/helpers/ui/DisplayDriver.h</code></strong> (<code>isOn/isEink/turnOn/turnOff/clear/startFrame/setTextSize/setColor/setCursor/print/fillRect/drawRect/drawXbm/getTextWidth/endFrame</code>). Вариант прошивки выбирает конкретный класс через <code>-D DISPLAY_CLASS=...</code> в своём <code>variants/&lt;name&gt;/platformio.ini</code>.</p>
+<p>Для GxEPD-панелей используется готовый драйвер <strong><code>src/helpers/ui/GxEPDDisplay.h</code> / <code>.cpp</code></strong> — обёртка над <code>GxEPD2_BW&lt;MODEL, MODEL::HEIGHT&gt;</code>. Он уже реализует всё: CRC32-дедупликацию кадров (лишний <code>endFrame()</code> не обновляет панель), частичное обновление (<code>setPartialWindow(0,0,w,h)</code> в <code>begin()</code>, <code>display.display(true)</code> в <code>endFrame()</code>), инверсию цветов, масштабирование шрифтов (<code>FreeSans9pt/FreeSansBold12pt/FreeSans18pt</code>), сон панели через GxEPD2 (<code>powerOff</code>/<code>hibernate</code> внутри библиотеки). <strong>Свой драйвер писать не нужно.</strong></p>
+<h3 id="gxepddisplay-define">Контракт GxEPDDisplay (все #define из его кода)</h3>
+<table>
+<thead>
+<tr>
+<th>Define</th>
+<th>Назначение</th>
+<th>Где задаётся</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>EINK_DISPLAY_MODEL</code></td>
+<td>Класс панели GxEPD2 (например <code>GxEPD2_290_T94</code>)</td>
+<td>build_flags варианта (или target.h)</td>
+</tr>
+<tr>
+<td><code>EINK_SCALE_X</code>, <code>EINK_SCALE_Y</code>, <code>EINK_X_OFFSET</code>, <code>EINK_Y_OFFSET</code></td>
+<td>Масштаб/смещение логического холста 128x128 на физическую панель</td>
+<td>build_flags варианта</td>
+</tr>
+<tr>
+<td><code>DISPLAY_ROTATION</code></td>
+<td>Поворот панели, по умолчанию 3 (см. <code>GxEPDDisplay.cpp</code>)</td>
+<td>build_flags варианта</td>
+</tr>
+<tr>
+<td><code>PIN_DISPLAY_CS</code>, <code>PIN_DISPLAY_DC</code>, <code>PIN_DISPLAY_RST</code>, <code>PIN_DISPLAY_BUSY</code></td>
+<td>Пины панели, подставляются в конструктор GxEPD2</td>
+<td><code>variant.h</code> варианта</td>
+</tr>
+<tr>
+<td><code>PIN_DISPLAY_SCLK</code>, <code>PIN_DISPLAY_MISO</code>, <code>PIN_DISPLAY_MOSI</code></td>
+<td>Пины SPI (используются только на ESP32, см. ниже)</td>
+<td><code>variant.h</code> варианта</td>
+</tr>
+<tr>
+<td><code>DISPLAY_CLASS=GxEPDDisplay</code></td>
+<td>Выбор драйвера</td>
+<td>build_flags варианта</td>
+</tr>
+<tr>
+<td>lib_deps</td>
+<td><code>zinggjm/GxEPD2 @ 1.6.2</code>, <code>bakercp/CRC32 @ ^2.0.0</code> (+ Adafruit GFX тянется зависимостями; wio-tracker-l1-eink для надёжности указывает и <code>adafruit/Adafruit GFX Library @ ^1.12.1</code>)</td>
+<td><code>variants/&lt;name&gt;/platformio.ini</code></td>
+</tr>
+<tr>
+<td>build_src_filter</td>
+<td><code>+&lt;helpers/ui/GxEPDDisplay.cpp&gt;</code></td>
+<td><code>variants/&lt;name&gt;/platformio.ini</code></td>
+</tr>
+</tbody>
+</table>
+<p>Примеры-образцы в репозитории:
+- <strong>nRF52840 + GxEPD2</strong>: <code>variants/mesh_pocket/</code> (Heltec Mesh Pocket, 2.13"), <code>variants/wio-tracker-l1-eink/</code> (см. <code>variants/wio-tracker-l1/variant.h</code>, «EInk on SPI1»), <code>variants/lilygo_techo/</code>.
+- <strong>ESP32 + GxEPD2</strong>: <code>variants/thinknode_m5/</code>, <code>variants/lilygo_techo_lite/</code>.
+- Отдельный случай — <code>variants/heltec_e290/</code>: драйвер <code>src/helpers/ui/E290Display.*</code> на библиотеке <code>heltec-eink-modules</code> (панель Heltec E290, 296x128, логический холст без масштабирования). Он завязан на модули Heltec, WeAct-модуль им не поддерживается — <strong>не использовать</strong>, упомянут для полноты.</p>
+<h2 id="2-spi-nrf52840-gxepddisplay">2. SPI на nRF52840 — важная особенность GxEPDDisplay</h2>
+<p>В <code>GxEPDDisplay.cpp</code>:
+- на ESP32 создаётся свой <code>SPIClass SPI1 = SPIClass(FSPI)</code> и <code>SPI1.begin(PIN_DISPLAY_SCLK, PIN_DISPLAY_MISO, PIN_DISPLAY_MOSI, PIN_DISPLAY_CS)</code>;
+- <strong>на nRF52840 ветки нет</strong>: используется глобальный <code>SPI1</code> из ядра Adafruit nRF52, и <code>SPI1.begin()</code> без аргументов — пины берутся из <code>variant.h</code>: <code>#define SPI_INTERFACES_COUNT 2</code> + <code>PIN_SPI1_SCK</code>, <code>PIN_SPI1_MISO</code>, <code>PIN_SPI1_MOSI</code> (пример: <code>variants/wio-tracker-l1/variant.h:105-115</code>, <code>variants/mesh_pocket/variant.h:106-118</code>).</p>
+<p>Итого для LuFree (HT-RA62, nRF52840): экран вешается на <strong>SPI1</strong>, радио остаётся на <code>SPI</code> (SPIM0). В <code>variant.h</code> нужны:</p>
+<pre><code class="language-c">#define SPI_INTERFACES_COUNT    2
+// e-paper WeAct 2.9&quot; — сверить с платой
+#define PIN_DISPLAY_CS          (...)   // чип-селект панели
+#define PIN_DISPLAY_DC          (...)   // data/command
+#define PIN_DISPLAY_RST         (...)   // reset
+#define PIN_DISPLAY_BUSY        (...)   // busy
+#define PIN_SPI1_SCK            (...)
+#define PIN_SPI1_MOSI           (...)
+#define PIN_SPI1_MISO           (-1)    // e-paper только пишет; -1 допустим
+// GxEPD2 требует эти имена даже для неиспользуемой шины (см. mesh_pocket/variant.h)
+extern const int MISO;
+extern const int MOSI;
+extern const int SCK;
+</code></pre>
+<p>Сигналы панели: <code>CS</code>, <code>DC</code>, <code>RST</code>, <code>BUSY</code> + <code>SCK</code>/<code>MOSI</code> (MISO не нужен; питание 3.3 В, GND). Скорость — 4 МГц задаёт <code>GxEPDDisplay::begin()</code> (классы GxEPD2 для 2.9" допускают до 10 МГц).</p>
+<h2 id="3-29-128x296">3. Панель 2.9" 128x296: готовая поддержка есть</h2>
+<p>MeshCore сам не содержит драйверов панелей 2.9" — панели берутся из GxEPD2 1.6.2. В этой версии все классы 2.9" <strong>128x296</strong>, BW, c частичным обновлением (проверено по исходникам <code>src/epd/GxEPD2_290_*.h</code>, <code>src/gdey/GxEPD2_290_GDEY029T94.h</code>):</p>
+<table>
+<thead>
+<tr>
+<th>Класс GxEPD2</th>
+<th>Контроллер</th>
+<th>Примечание</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>GxEPD2_290_GDEY029T94</code></td>
+<td><strong>SSD1680</strong></td>
+<td>Good Display GDEY029T94; быстрое частичное обновление (<code>hasFastPartialUpdate=true</code>, <code>useFastFullUpdate=true</code>); <strong>рекомендуемый дефолт</strong></td>
+</tr>
+<tr>
+<td><code>GxEPD2_290_T94</code></td>
+<td><strong>SSD1680</strong></td>
+<td>GDEM029T94, классический вариант</td>
+</tr>
+<tr>
+<td><code>GxEPD2_290_T94_V2</code></td>
+<td><strong>SSD1680</strong></td>
+<td>Waveshare 2.9" V2 (без partial-таблиц в OTP, медленнее)</td>
+</tr>
+<tr>
+<td><code>GxEPD2_290_BS</code></td>
+<td><strong>SSD1680</strong></td>
+<td>DEPG0290BS</td>
+</tr>
+<tr>
+<td><code>GxEPD2_290_T5D</code></td>
+<td><strong>UC8151D</strong></td>
+<td>GDEW029T5D</td>
+</tr>
+<tr>
+<td><code>GxEPD2_290_M06</code></td>
+<td><strong>UC8151D</strong></td>
+<td>GDEW029M06</td>
+</tr>
+<tr>
+<td><code>GxEPD2_290_T5</code></td>
+<td><strong>IL0373</strong></td>
+<td>GDEW029T5</td>
+</tr>
+<tr>
+<td><code>GxEPD2_290</code></td>
+<td><strong>IL3820</strong></td>
+<td>GDEH029A1, самый старый</td>
+</tr>
+</tbody>
+</table>
+<p>(Не подходят: <code>GxEPD2_290_GDEY029T71H</code> — это 128x384; <code>GxEPD2_290_I6FD</code> — спец-панель GDEW029I6FD.)</p>
+<p>Разница контроллеров инкапсулирована внутри GxEPD2 (разные команды инициализации, LUT, <strong>уровень BUSY</strong>: SSD1680 — <code>HIGH</code>, UC8151D/IL0373 — <code>LOW</code>; частота до 10 МГц у всех). Для MeshCore классы взаимозаменяемы: у всех одинаковый конструктор <code>(cs, dc, rst, busy)</code> и одинаковый набор методов, который вызывает <code>GxEPDDisplay</code>. Поэтому <strong>выбор контроллера меняется одним define</strong>, правок кода не требуется.</p>
+<h2 id="4-lufree-56">4. Рекомендуемая конфигурация для LuFree (для задач #5/#6)</h2>
+<p>В <code>variants/lufree/platformio.ini</code> (по образцу <code>mesh_pocket</code>, но панель 2.9"):</p>
+<pre><code class="language-ini">  -D DISPLAY_CLASS=GxEPDDisplay
+  -D EINK_DISPLAY_MODEL=GxEPD2_290_GDEY029T94   ; SSD1680, дефолт; альтернативы ниже
+  -D EINK_SCALE_X=2.3125f      ; 296/128 — логический холст 128x128 на панель 296x128 (поворот)
+  -D EINK_SCALE_Y=1.0f
+  -D EINK_X_OFFSET=0
+  -D EINK_Y_OFFSET=10          ; компенсация базовой линии шрифтов (как у mesh_pocket/wio)
+  -D DISPLAY_ROTATION=1        ; 1 или 3 — поворот в landscape 296x128, сверить по устройству
+</code></pre>
+<p>Альтернативы для <code>EINK_DISPLAY_MODEL</code> (раскомментировать одну при другом контроллере модуля WeAct): <code>GxEPD2_290_T94</code> (SSD1680/Waveshare-клон), <code>GxEPD2_290_T5D</code>/<code>GxEPD2_290_M06</code> (UC8151D), <code>GxEPD2_290_T5</code> (IL0373). Все 128x296, менять только этот define (сверено по исходникам GxEPD2 1.6.2).</p>
+<p><code>lib_deps</code> варианта: <code>${nrf52_base.lib_deps}</code> + <code>zinggjm/GxEPD2 @ 1.6.2</code> + <code>bakercp/CRC32 @ ^2.0.0</code> (при желании <code>adafruit/Adafruit GFX Library @ ^1.12.1</code>, как в wio-tracker-l1-eink). <code>build_src_filter</code>: <code>+&lt;helpers/ui/GxEPDDisplay.cpp&gt;</code>.</p>
+<h3 id="weact-studio-29-128x296">О WeAct Studio 2.9" 128x296</h3>
+<p>Контроллер на модуле не маркирован (по словам пользователя). Такие модули WeAct обычно повторяют Waveshare 2.9" и выпускаются в двух ревизиях: с SSD1680 (ревизия V2/V4) и с UC8151/IL0373-совместимым (V1). Различить можно по работе дефолтного класса: SSD1680-классы при UC8151-панели виснут на BUSY (и наоборот). Поэтому дефолт SSD1680 + закомментированные альтернативы в конфиге — правильная стратегия; логика выбора одного define уже поддержана GxEPDDisplay без правок общих файлов.</p>
+<h2 id="5-led">5. Подсветка/LED</h2>
+<p>По решению пользователя LED — оповещение, не подсветка. Механизмы <code>DISP_BACKLIGHT</code>/<code>BACKLIGHT_BTN</code> в <code>GxEPDDisplay.cpp</code> к LuFree не применяются (это флаги подсветки OLED/LCD-вариантов).</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["content.action.edit", "content.code.copy", "search.highlight", "search.suggest"], "search": "../../assets/javascripts/workers/search.a7633da7.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.c21346df.min.js"></script>
+      
+    
+  </body>
+</html>

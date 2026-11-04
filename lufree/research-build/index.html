@@ -1,0 +1,1230 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Documentation for the open source MeshCore firmware">
+      
+      
+      
+        <link rel="canonical" href="https://meshcore-dev.github.io/meshcore/lufree/research-build/">
+      
+      
+        <link rel="prev" href="../">
+      
+      
+        <link rel="next" href="../research-epaper/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.8.0">
+    
+    
+      
+        <title>Исследование: система вариантов и CI в MeshCore - MeshCore Docs</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.57a0d79d.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../_stylesheets/extra.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    <body dir="ltr">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#ci-meshcore" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="MeshCore Docs" class="md-header__button md-logo" aria-label="MeshCore Docs" data-md-component="logo">
+      
+  <img src="../../_assets/meshcore.svg" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            MeshCore Docs
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Исследование: система вариантов и CI в MeshCore
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/meshcore-dev/meshcore/" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    meshcore-dev/meshcore
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="MeshCore Docs" class="md-nav__button md-logo" aria-label="MeshCore Docs" data-md-component="logo">
+      
+  <img src="../../_assets/meshcore.svg" alt="logo">
+
+    </a>
+    MeshCore Docs
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/meshcore-dev/meshcore/" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    meshcore-dev/meshcore
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Introduction
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../cli_commands/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CLI Commands
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../companion_protocol/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Companion Protocol
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../docs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Local Documentation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../faq/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Frequently Asked Questions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../kiss_modem_protocol/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    MeshCore KISS Modem Protocol
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../nrf52_power_management/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    nRF52 Power Management
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../number_allocations/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Number Allocations
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../packet_format/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Packet Format
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../payloads/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Payload Format
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../qr_codes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    QR Codes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../stats_binary_frames/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Stats Binary Frame Structures
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../terminal_chat_cli/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Terminal Chat CLI
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_14" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_14" id="__nav_14_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Lufree
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_14_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_14">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Lufree
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    LuFree — прошивка MeshCore для «лучика»
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Исследование: система вариантов и CI в MeshCore
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Исследование: система вариантов и CI в MeshCore
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Как устроен вариант прошивки
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="1. Как устроен вариант прошивки">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#variantswio_wm1110-nrf52840-lr1110" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Состав папки варианта (пример variants/wio_wm1110/ — nRF52840 + LR1110)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#companion-nrf52-variantswio_wm1110platformioini-variantslilygo_techoplatformioini" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Шаблон окружения companion (nRF52, пример variants/wio_wm1110/platformio.ini и variants/lilygo_techo/platformio.ini)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#lufree" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Что нужно для нового варианта LuFree (шаги)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-ci-lufree" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. CI: как отключить автосборку всех прошивок, кроме LuFree
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2. CI: как отключить автосборку всех прошивок, кроме LuFree">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#ci" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Как устроена сборка в CI
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Что именно менять (точные места)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Локальная сборка
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#lufree_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Приложение: полезные факты для LuFree
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../research-epaper/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Исследование: e-paper в MeshCore и подключение экрана 2.9" 128x296 (WeAct) в LuFree
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../research-input-board/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Исследование: ввод (кнопки/стик) и nRF52840 в MeshCore
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Как устроен вариант прошивки
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="1. Как устроен вариант прошивки">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#variantswio_wm1110-nrf52840-lr1110" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Состав папки варианта (пример variants/wio_wm1110/ — nRF52840 + LR1110)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#companion-nrf52-variantswio_wm1110platformioini-variantslilygo_techoplatformioini" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Шаблон окружения companion (nRF52, пример variants/wio_wm1110/platformio.ini и variants/lilygo_techo/platformio.ini)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#lufree" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Что нужно для нового варианта LuFree (шаги)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-ci-lufree" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. CI: как отключить автосборку всех прошивок, кроме LuFree
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2. CI: как отключить автосборку всех прошивок, кроме LuFree">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#ci" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Как устроена сборка в CI
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Что именно менять (точные места)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Локальная сборка
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#lufree_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Приложение: полезные факты для LuFree
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+    <a href="https://github.com/meshcore-dev/meshcore/edit/main/docs/lufree/research-build.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 20H6V4h7v5h5v3.1l2-2V8l-6-6H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h4zm10.2-7c.1 0 .3.1.4.2l1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2m0 3.9L14.1 23H12v-2.1l6.1-6.1z"/></svg>
+    </a>
+  
+  
+
+
+<h1 id="ci-meshcore">Исследование: система вариантов и CI в MeshCore</h1>
+<p>Факты из репозитория <code>workspace/MeshCore</code> (клон git@github.com:Trahomich/MeshCore.git).
+Цель документа: дать следующей задаче всё необходимое для добавления варианта прошивки <strong>LuFree</strong>
+(Heltec HT-RA62: nRF52840 + SX1262, e-paper WeAct 2.9" 128x296, 5-позиционный стик, LED) без чтения репозитория целиком.</p>
+<h2 id="1">1. Как устроен вариант прошивки</h2>
+<p>Репозиторий — один PlatformIO-проект. Сборочные окружения (<code>[env:...]</code>) не лежат в корневом
+<code>platformio.ini</code> — они разнесены по <code>variants/&lt;имя&gt;/platformio.ini</code>, которые подхватываются строкой в
+корневом файле:</p>
+<ul>
+<li><code>platformio.ini</code>, блок <code>[platformio]</code>: <code>extra_configs = variants/*/platformio.ini</code> (+ <code>platformio.local.ini</code>).</li>
+<li>Корневой <code>platformio.ini</code> содержит только базовые секции: <code>arduino_base</code>, <code>esp32_base</code>, <code>nrf52_base</code>,
+  <code>rp2040_base</code>, <code>stm32_base</code>, <code>sensor_base</code>, <code>env:native</code> (тесты).</li>
+</ul>
+<h3 id="variantswio_wm1110-nrf52840-lr1110">Состав папки варианта (пример <code>variants/wio_wm1110/</code> — nRF52840 + LR1110)</h3>
+<table>
+<thead>
+<tr>
+<th>Файл</th>
+<th>Назначение</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>platformio.ini</code></td>
+<td>Базовая секция (название = имени варианта без <code>env:</code>) + окружения <code>[env:&lt;имя&gt;_&lt;роль&gt;]</code>: <code>_companion_radio_ble</code>, <code>_companion_radio_usb</code>, <code>_repeater</code>, <code>_room_server</code>, <code>_kiss_modem</code></td>
+</tr>
+<tr>
+<td><code>target.h</code> / <code>target.cpp</code></td>
+<td>Объекты <code>board</code>, <code>radio_driver</code>, <code>rtc_clock</code>, <code>sensors</code>, (<code>display</code>, <code>user_btn</code> если есть экран); функции <code>radio_init()</code>, <code>radio_new_identity()</code></td>
+</tr>
+<tr>
+<td><code>variant.cpp</code> / <code>variant.h</code></td>
+<td>nRF52-специфика уровня Adafruit-ядра: номера пинов (<code>PIN_SERIAL1_RX</code>, <code>PIN_WIRE_SDA</code>, <code>PINS_COUNT</code> …), тактирование</td>
+</tr>
+<tr>
+<td><code>&lt;Board&gt;.cpp/.h</code> (необязательно)</td>
+<td>Класс платы, наследник <code>NRF52Board</code> (или ESP32Board и т.п.), см. <code>src/helpers/NRF52Board.h</code></td>
+</tr>
+<tr>
+<td><code>pins_arduino.h</code></td>
+<td>ESP32-варианты: маппинг пинов для ядра Arduino</td>
+</tr>
+</tbody>
+</table>
+<p>Связь с <code>boards/</code>: nRF52-варианты берут готовый board-json (например
+<code>board = seeed-xiao-afruitnrf52-nrf52840</code> — xiao-подобные платы nRF52840 с S140 v7; <code>board_build.ldscript = boards/nrf52840_s140_v7.ld</code>).
+Свежие board-json для новых плат кладут в <code>boards/</code> и указывают <code>board = &lt;имя_файла_без_.json&gt;</code>.
+Пиннинг радиочасти и периферии задаётся <code>-D P_LORA_*=</code>, <code>-D DISP_*=</code>, <code>-D PIN_USER_BTN=</code> и т.п. в build_flags.</p>
+<h3 id="companion-nrf52-variantswio_wm1110platformioini-variantslilygo_techoplatformioini">Шаблон окружения companion (nRF52, пример <code>variants/wio_wm1110/platformio.ini</code> и <code>variants/lilygo_techo/platformio.ini</code>)</h3>
+<p>Компаньон BLE: <code>extends = &lt;базовая_секция&gt;</code> + <code>board_build.ldscript = boards/nrf52840_s140_v7_extrafs.ld</code>,
+<code>board_upload.maximum_size = 708608</code>, флаги <code>-D MAX_CONTACTS=350 -D MAX_GROUP_CHANNELS=40 -D BLE_PIN_CODE=123456 -D QSPIFLASH=1 -D OFFLINE_QUEUE_SIZE=256</code>,
+<code>-I examples/companion_radio/ui-new</code>, build_src_filter добавляет
+<code>+&lt;helpers/nrf52/SerialBLEInterface.cpp&gt;</code>, <code>+&lt;../examples/companion_radio/*.cpp&gt;</code>, <code>+&lt;../examples/companion_radio/ui-new/*.cpp&gt;</code>,
+lib_deps + <code>densaugeo/base64 @ ~1.4.0</code>.</p>
+<p>Экран подключается макросом <code>-D DISPLAY_CLASS=...</code> + добавлением <code>helpers/ui/&lt;Класс&gt;Display.cpp</code> в build_src_filter.
+Для GxEPD2-e-ink (см. <code>variants/wio-tracker-l1-eink/platformio.ini</code> и <code>src/helpers/ui/GxEPDDisplay.h</code>):
+<code>-D DISPLAY_CLASS=GxEPDDisplay</code>, <code>-D EINK_DISPLAY_MODEL=GxEPD2_213_B74</code> (выбор контроллера GxEPD2), <code>-D EINK_SCALE_X/Y</code>, <code>-D EINK_X/Y_OFFSET</code>, <code>-D DISPLAY_ROTATION=1</code>,
+lib_deps: <code>adafruit/Adafruit GFX Library @ ^1.12.1</code>, <code>zinggjm/GxEPD2 @ 1.6.2</code>. Пины экрана: <code>PIN_DISPLAY_CS/DC/RST/BUSY</code> (или <code>DISP_CS/DC/RST/BUSY</code>, если модель не задана).</p>
+<p>Роль прошивок суффиксами <code>_companion_radio_usb</code>, <code>_companion_radio_ble</code>, <code>_repeater</code>, <code>_room_server</code>, <code>_kiss_modem</code> — это важно для build.sh (см. ниже).</p>
+<h3 id="lufree">Что нужно для нового варианта LuFree (шаги)</h3>
+<ol>
+<li>Папка <code>variants/lufree/</code> с <code>platformio.ini</code> (+ при необходимости <code>target.cpp/h</code>, <code>variant.cpp/h</code>, <code>LuFreeBoard.cpp/h</code>).</li>
+<li>Базовая секция <code>[lufree]</code>: <code>extends = nrf52_base</code>; <code>board = seeed-xiao-afruitnrf52-nrf52840</code> (или собственный <code>boards/lufree.json</code> по образцу <code>boards/promicro_nrf52840.json</code>); линкер <code>boards/nrf52840_s140_v7.ld</code>.</li>
+<li>Радио SX1262, как у nRF52840+SX1262-вариантов <code>variants/lilygo_techo</code> и <code>variants/mesh_pocket</code>: <code>-D USE_SX1262 -D RADIO_CLASS=CustomSX1262 -D WRAPPER_CLASS=CustomSX1262Wrapper</code>, <code>-D P_LORA_DIO_1/NSS/RESET/BUSY/SCLK/MOSI/MISO=...</code>, <code>-D SX126X_DIO2_AS_RF_SWITCH</code> и др. (уточнить по маркировке платы; если модуль окажется LR1110 — образец <code>variants/wio_wm1110</code> с CustomLR1110, но по спецификации Heltec HT-RA62 — SX1262).</li>
+<li>Экран: <code>-D DISPLAY_CLASS=GxEPDDisplay</code>, <code>-D EINK_DISPLAY_MODEL=GxEPD2_290_...</code> (модель для 2.9" 128x296, выбор — задача исследования e-paper #3), пины <code>PIN_DISPLAY_*</code>.</li>
+<li>Окружение <code>[env:lufree_companion_radio_ble]</code> (+ при желании <code>_usb</code>) по шаблону T-Echo/wm1110 выше.</li>
+<li>Env-имя должно содержать суффикс <code>_companion_radio_ble</code>/<code>_usb</code>, чтобы попасть в <code>build.sh build-companion-firmwares</code>, либо вызывать <code>build.sh build-firmware lufree_companion_radio_ble</code> явно.</li>
+</ol>
+<h2 id="2-ci-lufree">2. CI: как отключить автосборку всех прошивок, кроме LuFree</h2>
+<h3 id="ci">Как устроена сборка в CI</h3>
+<p>Все три firmware-workflow устроены одинаково и запускают <code>build.sh</code>:</p>
+<ul>
+<li><code>.github/workflows/build-companion-firmwares.yml</code>: триггеры <code>workflow_dispatch</code> + <code>push: tags: ['companion-*']</code>; шаг <code>run: /usr/bin/env bash build.sh build-companion-firmwares</code>; артефакт <code>out/</code> + draft-release по тегу.</li>
+<li><code>.github/workflows/build-repeater-firmwares.yml</code>: то же, теги <code>repeater-*</code>, <code>build.sh build-repeater-firmwares</code>.</li>
+<li><code>.github/workflows/build-room-server-firmwares.yml</code>: то же, теги <code>room-server-*</code>, <code>build.sh build-room-server-firmwares</code>.</li>
+<li><code>.github/workflows/pr-build-check.yml</code>: matrix-список 11 окружений (Heltec_v3, RAK_4631, PicoW, wio-e5-mini, Tlora_C6, wio_wm1110_repeater, Tbeam_SX1276); триггеры push/PR в main/dev по путям <code>src/**, examples/**, variants/**, platformio.ini, сам workflow</code>. Сборка: <code>pio run -e ${{ matrix.environment }}</code>.</li>
+<li><code>.github/workflows/run-unit-tests.yml</code>: <code>pio test -e native</code> на каждый push/PR — к прошивкам отношения не имеет.</li>
+<li><code>.github/workflows/github-pages.yml</code>: mkdocs-документация на push в main — к прошивкам не относится.</li>
+<li>Общий сетап: <code>.github/actions/setup-build-environment</code> (pip install platformio + извлечение версии из тега <code>room-server-v1.2.3</code> → <code>v1.2.3</code>).</li>
+</ul>
+<p><code>build.sh</code> не имеет статического списка: он вызывает <code>pio project config</code>, берёт <strong>все</strong> env из <code>variants/*/platformio.ini</code> и строит всё по суффиксу:
+<code>build_all_firmwares_by_suffix "_companion_radio_usb"</code> + <code>"_companion_radio_ble"</code> (иначе <code>_repeater</code>, <code>_room_server</code>).
+Т.е. <strong>пока в репозитории лежат другие варианты, любой вызов <code>build-companion-firmwares</code> соберёт и их</strong>.</p>
+<h3 id="_1">Что именно менять (точные места)</h3>
+<p>Вариант A (рекомендуемый, минимальные правки — LuFree остаётся единственной автособираемой прошивкой):</p>
+<ol>
+<li><code>build.sh</code>, функция <code>build_companion_firmwares()</code> (строки 211–227): закомментировать/убрать <code>build_all_firmwares_by_suffix "_companion_radio_usb"</code> и <code>"_companion_radio_ble"</code> и вместо них — явный список:
+   <code>bash
+   build_firmware "lufree_companion_radio_ble"
+   # build_firmware "lufree_companion_radio_usb"   # при наличии env</code>
+   Аналогично <code>build_repeater_firmwares()</code> и <code>build_room_server_firmwares()</code> (там у LuFree ролей нет — можно оставить тело пустым или <code>:;</code> с комментарием «autobuild disabled, LuFree only»).</li>
+<li><code>build-companion-firmwares.yml</code>: триггеры оставить как есть (<code>workflow_dispatch</code> + теги <code>companion-*</code>) — сборка пойдёт только для LuFree. При желании добавить срабатывание и на push в main (тогда артефакт будет обновляться без тега; Release-шаг уже ограничен <code>if: startsWith(github.ref, 'refs/tags/')</code>).</li>
+<li><code>build-repeater-firmwares.yml</code> и <code>build-room-server-firmwares.yml</code>: отключить автосборку полностью — убрать блоки <code>on: push: tags: ...</code>, оставив только <code>workflow_dispatch:</code> (или удалить файлы; сохранение с <code>workflow_dispatch</code> мягче).</li>
+<li><code>pr-build-check.yml</code>: в <code>jobs.build.strategy.matrix.environment</code> заменить весь список на единственную строку <code>- lufree_companion_radio_ble</code> (так проверка сборки на каждый push/PR останется только для LuFree).</li>
+<li><code>run-unit-tests.yml</code> и <code>github-pages.yml</code> не трогать (не прошивки).</li>
+</ol>
+<p>Вариант B (радикальный): удалить <code>variants/*</code> других плат и три build-workflow, оставив один workflow, собирающий <code>lufree</code> — не рекомендуется: ломает историю/совместимость апстрима и заметно усложняет поддержку.</p>
+<h2 id="3">3. Локальная сборка</h2>
+<ul>
+<li>PlatformIO CLI установлен в workspace-окружении: <code>~/.local/bin/pio</code> (установлен через <code>uv tool install platformio</code>; в PATH его нет — добавлять <code>export PATH="$HOME/.local/bin:$PATH"</code> или вызывать по полному пути). Сеть доступна, пакеты/платформы качаются.</li>
+<li>Сборка одного варианта: <code>cd MeshCore &amp;&amp; pio run -e &lt;env&gt;</code> (например <code>pio run -e lufree_companion_radio_ble</code>). Полный артефакт — через <code>sh build.sh build-firmware &lt;env&gt;</code> (нужен <code>export FIRMWARE_VERSION=v0.0.1</code>), он же делает <code>.uf2</code> для nRF52 (<code>bin/uf2conv/uf2conv.py</code>, флаг <code>0xADA52840</code>) и кладёт в <code>out/</code>.</li>
+<li>Первая сборка качает платформу <code>nordicnrf52</code>, форк <code>framework-arduinoadafruitnrf52</code> (meshcore-dev) и библиотеки — несколько сотен МБ и десятки минут; далее кэшируется в <code>~/.platformio</code>.</li>
+<li>Валидационная сборка <code>wio_wm1110_repeater</code> (nRF52840) выполнена локально успешно: <code>pio run -e wio_wm1110_repeater</code> → SUCCESS за ~4.5 мин (RAM 12.4%, Flash 51.1%), включая скачивание платформы nordicnrf52 и библиотек. Значит локальная сборка нового варианта LuFree полностью реалистична.</li>
+<li>Вывод: локальная сборка реалистична и её стоит использовать для проверки перед CI; CI остаётся источником релизных артефактов.</li>
+</ul>
+<h2 id="lufree_1">Приложение: полезные факты для LuFree</h2>
+<ul>
+<li>Плата Heltec HT-RA62 = nRF52840 + SX1262 (по спецификации heltec.org/project/ht-ra62; RF-чип модуля — SX1262). Радиочасть: <code>USE_SX1262</code> / <code>CustomSX1262</code> / <code>CustomSX1262Wrapper</code>, флаги <code>SX126X_*</code> — образцы <code>variants/lilygo_techo</code>, <code>variants/mesh_pocket</code>. («WeAct Studio» из ответа пользователя относится к экрану, не к плате.) LR1110 — только если маркировка платы его покажет (образец тогда <code>variants/wio_wm1110</code>).</li>
+<li>nRF52-компаньон с экраном уже существует: <code>variants/lilygo_techo</code> (T-Echo, e-ink + GxEPDDisplay) и <code>variants/wio-tracker-l1-eink</code> (env только repeater, но показывает набор <code>EINK_*</code>-макросов).</li>
+<li><code>ikoka_stick_nrf</code> — пример nRF52-варианта без собственной board-платы (использует <code>seeed-xiao-afruitnrf52-nrf52840</code>).</li>
+<li>5-позиционный стик: в MeshCore нет готового драйвера 5-way stick; ввод — <code>PIN_USER_BTN</code> + <code>src/helpers/ui/MomentaryButton.cpp</code>. Стик-навигация — отдельная задача (исследование #4).</li>
+<li>Итоговое имя env, упомянутое в задаче планирования: <code>lufree</code> (минимум <code>lufree_companion_radio_ble</code>).</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["content.action.edit", "content.code.copy", "search.highlight", "search.suggest"], "search": "../../assets/javascripts/workers/search.a7633da7.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.c21346df.min.js"></script>
+      
+    
+  </body>
+</html>
