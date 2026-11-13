@@ -1,0 +1,95 @@
+name: Build Luchik Firmware
+
+# Автосборка прошивок «Лучика» (CONTRACTS.md, раздел 5):
+# шесть окружений luchik_{promicro,weact290,ra62}_{ble,usb} из
+# variants/luchik/platformio.ini, артефакты → релиз luchik-latest.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: Clone Repo
+        uses: actions/checkout@v6
+
+      - name: Setup Build Environment
+        uses: ./.github/actions/setup-build-environment
+
+      # build.sh собирает все env, содержащие "luchik", и кладёт в out/
+      # файлы вида luchik_<target>_<ble|usb>-<версия>-<sha>.uf2/.zip
+      - name: Build Luchik Firmwares
+        env:
+          FIRMWARE_VERSION: ci
+        run: /usr/bin/env bash build.sh build-matching-firmwares luchik
+
+      - name: Check Expected Files
+        run: |
+          set -euo pipefail
+          ls -la out/
+          miss=0
+          for t in luchik_promicro_ble luchik_promicro_usb luchik_weact290_ble luchik_weact290_usb luchik_ra62_ble luchik_ra62_usb; do
+            ls out/${t}-ci-*.uf2 >/dev/null 2>&1 || { echo "::error::missing ${t}.uf2"; miss=1; }
+            ls out/${t}-ci-*.zip >/dev/null 2>&1 || { echo "::error::missing ${t}.zip"; miss=1; }
+          done
+          [ "$miss" = 0 ] || exit 1
+
+      - name: Upload Workflow Artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: luchik-firmwares
+          path: out
+
+      # Публикация в rolling-релиз luchik-latest со стабильными именами
+      # (старые ассеты перезаписываются). gh CLI вместо
+      # softprops/action-gh-release: у него замена существующих ассетов
+      # падала (см. историю LuFree CI) — здесь upload --clobber с ретраями.
+      - name: Publish to Release luchik-latest
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          mkdir -p release
+          # стабильные имена: luchik_<target>_<ble|usb>.uf2/.zip
+          for t in luchik_promicro_ble luchik_promicro_usb luchik_weact290_ble luchik_weact290_usb luchik_ra62_ble luchik_ra62_usb; do
+            cp out/${t}-ci-*.uf2 release/${t}.uf2
+            cp out/${t}-ci-*.zip release/${t}.zip
+          done
+          ls -la release/
+          BODY=$(cat <<'EOF'
+          Автосборка прошивки «Лучик» (MeshCore companion, ProMicro nRF52840).
+
+          Коммит: ${{ github.sha }}
+
+          Цели:
+          - `luchik_promicro` — базовый вариант (fakeTec SX1262)
+          - `luchik_weact290` — + e-paper WeAct 2.9" (SSD1680), автоподбор пинов прошивкой
+          - `luchik_ra62` — радио-модуль HT-RA62 (SX1262, TCXO, DIO2 RF-свитч)
+
+          Для каждой цели: `_ble` (BLE-интерфейс) и `_usb` (USB CDC).
+          `.zip` — DFU-пакет (nRF Connect Programmer / Web Device View);
+          `.uf2` — drag-and-drop в режиме DFU-бутлоадера (дважды RESET).
+          EOF
+          )
+          R="${GITHUB_REPOSITORY}"
+          if gh release view luchik-latest -R "$R" >/dev/null 2>&1; then
+            gh release edit luchik-latest -R "$R" \
+              --title "Luchik Firmware (latest)" --notes "$BODY" --prerelease
+          else
+            gh release create luchik-latest -R "$R" --prerelease \
+              --title "Luchik Firmware (latest)" --notes "$BODY"
+          fi
+          ok=0
+          for i in 1 2 3; do
+            if gh release upload luchik-latest -R "$R" release/*.uf2 release/*.zip --clobber; then ok=1; break; fi
+            echo "upload attempt $i failed, retrying in 20s"; sleep 20
+          done
+          [ "$ok" = 1 ] || { echo "::error::release upload failed after 3 attempts"; exit 1; }
+          gh release view luchik-latest -R "$R" --json assets -q '.assets[].name'
